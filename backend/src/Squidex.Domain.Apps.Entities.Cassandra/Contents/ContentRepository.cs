@@ -23,25 +23,25 @@ using Squidex.Infrastructure.Queries;
 
 namespace Squidex.Domain.Apps.Entities.Cassandra.Contents
 {
-    public partial class MongoContentRepository : IContentRepository, IInitializable
+    public partial class ContentRepository : IContentRepository, IInitializable
     {
-        private readonly MongoContentCollection collectionAll;
-        private readonly MongoContentCollection collectionPublished;
+        private readonly ContentCollection collectionAll;
+        private readonly ContentCollection collectionPublished;
         private readonly IAppProvider appProvider;
 
-        static MongoContentRepository()
+        static ContentRepository()
         {
             TypeConverterStringSerializer<Status>.Register();
         }
 
-        public MongoContentRepository(IMongoDatabase database, IAppProvider appProvider)
+        public ContentRepository(IMongoDatabase database, IAppProvider appProvider)
         {
             collectionAll =
-                new MongoContentCollection("States_Contents_All3", database, appProvider,
+                new ContentCollection("States_Contents_All3", database, appProvider,
                     ReadPreference.Primary);
 
             collectionPublished =
-                new MongoContentCollection("States_Contents_Published3", database, appProvider,
+                new ContentCollection("States_Contents_Published3", database, appProvider,
                     ReadPreference.Secondary);
 
             this.appProvider = appProvider;
@@ -142,7 +142,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Contents
             return collectionAll.QueryIdsAsync(appId, schemaId, filterNode, ct);
         }
 
-        public IEnumerable<IMongoCollection<MongoContentEntity>> GetInternalCollections()
+        public IEnumerable<IMongoCollection<ContentEntity>> GetInternalCollections()
         {
             yield return collectionAll.GetInternalCollection();
             yield return collectionPublished.GetInternalCollection();

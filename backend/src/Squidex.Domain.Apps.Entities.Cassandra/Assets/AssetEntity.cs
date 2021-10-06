@@ -5,15 +5,17 @@
 //  All rights reserved. Licensed under the MIT license.
 // ==========================================================================
 
+using System.Collections.Generic;
 using MongoDB.Bson.Serialization.Attributes;
 using NodaTime;
+using Squidex.Domain.Apps.Core.Assets;
 using Squidex.Domain.Apps.Entities.Assets;
 using Squidex.Infrastructure;
 using Squidex.Infrastructure.MongoDb;
 
 namespace Squidex.Domain.Apps.Entities.Cassandra.Assets
 {
-    public sealed class MongoAssetFolderEntity : IAssetFolderEntity, IVersionedEntity<DomainId>
+    public sealed class AssetEntity : IAssetEntity, IVersionedEntity<DomainId>
     {
         [BsonId]
         [BsonElement("_id")]
@@ -23,11 +25,11 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Assets
         [BsonElement("_ai")]
         public DomainId IndexedAppId { get; set; }
 
-        [BsonRequired]
+        [BsonIgnoreIfDefault]
         [BsonElement("id")]
         public DomainId Id { get; set; }
 
-        [BsonRequired]
+        [BsonIgnoreIfDefault]
         [BsonElement("pi")]
         public DomainId ParentId { get; set; }
 
@@ -44,12 +46,36 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Assets
         public Instant LastModified { get; set; }
 
         [BsonRequired]
+        [BsonElement("mm")]
+        public string MimeType { get; set; }
+
+        [BsonRequired]
         [BsonElement("fn")]
-        public string FolderName { get; set; }
+        public string FileName { get; set; }
+
+        [BsonIgnoreIfDefault]
+        [BsonElement("fh")]
+        public string FileHash { get; set; }
+
+        [BsonIgnoreIfDefault]
+        [BsonElement("sl")]
+        public string Slug { get; set; }
+
+        [BsonRequired]
+        [BsonElement("fs")]
+        public long FileSize { get; set; }
+
+        [BsonRequired]
+        [BsonElement("fv")]
+        public long FileVersion { get; set; }
 
         [BsonRequired]
         [BsonElement("vs")]
         public long Version { get; set; }
+
+        [BsonRequired]
+        [BsonElement("at")]
+        public AssetType Type { get; set; }
 
         [BsonRequired]
         [BsonElement("cb")]
@@ -59,9 +85,27 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Assets
         [BsonElement("mb")]
         public RefToken LastModifiedBy { get; set; }
 
+        [BsonIgnoreIfNull]
+        [BsonElement("td")]
+        public HashSet<string> Tags { get; set; }
+
+        [BsonIgnoreIfDefault]
+        [BsonElement("pt")]
+        public bool IsProtected { get; set; }
+
         [BsonRequired]
         [BsonElement("dl")]
         public bool IsDeleted { get; set; }
+
+        [BsonJson]
+        [BsonRequired]
+        [BsonElement("md")]
+        public AssetMetadata Metadata { get; set; }
+
+        public DomainId AssetId
+        {
+            get => Id;
+        }
 
         public DomainId UniqueId
         {

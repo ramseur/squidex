@@ -28,7 +28,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Contents.Operations
                 if (propertyMap == null)
                 {
                     propertyMap =
-                        BsonClassMap.LookupClassMap(typeof(MongoContentEntity)).AllMemberMaps
+                        BsonClassMap.LookupClassMap(typeof(ContentEntity)).AllMemberMaps
                             .ToDictionary(
                                 x => x.MemberName,
                                 x => x.ElementName,

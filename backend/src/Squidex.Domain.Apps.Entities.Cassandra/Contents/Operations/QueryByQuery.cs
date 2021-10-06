@@ -33,7 +33,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Contents.Operations
             [BsonElement("_id")]
             public DomainId Id { get; set; }
 
-            public MongoContentEntity[] Joined { get; set; }
+            public ContentEntity[] Joined { get; set; }
         }
 
         public QueryByQuery(IAppProvider appProvider)
@@ -41,9 +41,9 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Contents.Operations
             this.appProvider = appProvider;
         }
 
-        public override IEnumerable<CreateIndexModel<MongoContentEntity>> CreateIndexes()
+        public override IEnumerable<CreateIndexModel<ContentEntity>> CreateIndexes()
         {
-            yield return new CreateIndexModel<MongoContentEntity>(Index
+            yield return new CreateIndexModel<ContentEntity>(Index
                 .Descending(x => x.LastModified)
                 .Ascending(x => x.Id)
                 .Ascending(x => x.IndexedAppId)
@@ -51,7 +51,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Contents.Operations
                 .Ascending(x => x.IsDeleted)
                 .Ascending(x => x.ReferencedIds));
 
-            yield return new CreateIndexModel<MongoContentEntity>(Index
+            yield return new CreateIndexModel<ContentEntity>(Index
                 .Ascending(x => x.IndexedSchemaId)
                 .Ascending(x => x.IsDeleted)
                 .Descending(x => x.LastModified));
@@ -160,7 +160,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Contents.Operations
             }
         }
 
-        private async Task<List<MongoContentEntity>> FindContentsAsync(ClrQuery query, FilterDefinition<MongoContentEntity> filter,
+        private async Task<List<ContentEntity>> FindContentsAsync(ClrQuery query, FilterDefinition<ContentEntity> filter,
             CancellationToken ct)
         {
             if (query.Skip > 0 && !IsSatisfiedByIndex(query))
@@ -179,7 +179,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Contents.Operations
                         .QuerySort(query)
                         .QuerySkip(query)
                         .QueryLimit(query)
-                        .Lookup<IdOnly, MongoContentEntity, IdOnly>(Collection, x => x.Id, x => x.DocumentId, x => x.Joined)
+                        .Lookup<IdOnly, ContentEntity, IdOnly>(Collection, x => x.Id, x => x.DocumentId, x => x.Joined)
                         .ToListAsync(ct);
 
                 return joined.Select(x => x.Joined[0]).ToList();
@@ -205,9 +205,9 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Contents.Operations
                 query.Sort[1].Order == SortOrder.Ascending;
         }
 
-        private static FilterDefinition<MongoContentEntity> BuildFilter(DomainId appId, DomainId schemaId, FilterNode<ClrValue>? filter)
+        private static FilterDefinition<ContentEntity> BuildFilter(DomainId appId, DomainId schemaId, FilterNode<ClrValue>? filter)
         {
-            var filters = new List<FilterDefinition<MongoContentEntity>>
+            var filters = new List<FilterDefinition<ContentEntity>>
             {
                 Filter.Exists(x => x.LastModified),
                 Filter.Exists(x => x.Id),
@@ -222,16 +222,16 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Contents.Operations
 
             if (filter != null)
             {
-                filters.Add(filter.BuildFilter<MongoContentEntity>());
+                filters.Add(filter.BuildFilter<ContentEntity>());
             }
 
             return Filter.And(filters);
         }
 
-        private static FilterDefinition<MongoContentEntity> CreateFilter(DomainId appId, IEnumerable<DomainId> schemaIds,  ClrQuery? query,
+        private static FilterDefinition<ContentEntity> CreateFilter(DomainId appId, IEnumerable<DomainId> schemaIds,  ClrQuery? query,
             DomainId referenced, RefToken? createdBy)
         {
-            var filters = new List<FilterDefinition<MongoContentEntity>>
+            var filters = new List<FilterDefinition<ContentEntity>>
             {
                 Filter.Exists(x => x.LastModified),
                 Filter.Exists(x => x.Id),
@@ -246,7 +246,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Contents.Operations
 
             if (query?.Filter != null)
             {
-                filters.Add(query.Filter.BuildFilter<MongoContentEntity>());
+                filters.Add(query.Filter.BuildFilter<ContentEntity>());
             }
 
             if (referenced != default)

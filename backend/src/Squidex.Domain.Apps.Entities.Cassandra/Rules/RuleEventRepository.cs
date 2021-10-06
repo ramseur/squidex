@@ -21,14 +21,14 @@ using Squidex.Infrastructure.Reflection;
 
 namespace Squidex.Domain.Apps.Entities.Cassandra.Rules
 {
-    public sealed class MongoRuleEventRepository : MongoRepositoryBase<MongoRuleEventEntity>, IRuleEventRepository
+    public sealed class RuleEventRepository : MongoRepositoryBase<RuleEventEntity>, IRuleEventRepository
     {
-        private readonly MongoRuleStatisticsCollection statisticsCollection;
+        private readonly RuleStatisticsCollection statisticsCollection;
 
-        public MongoRuleEventRepository(IMongoDatabase database)
+        public RuleEventRepository(IMongoDatabase database)
             : base(database)
         {
-            statisticsCollection = new MongoRuleStatisticsCollection(database);
+            statisticsCollection = new RuleStatisticsCollection(database);
         }
 
         protected override string CollectionName()
@@ -36,20 +36,20 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Rules
             return "RuleEvents";
         }
 
-        protected override async Task SetupCollectionAsync(IMongoCollection<MongoRuleEventEntity> collection,
+        protected override async Task SetupCollectionAsync(IMongoCollection<RuleEventEntity> collection,
             CancellationToken ct = default)
         {
             await statisticsCollection.InitializeAsync(ct);
 
             await collection.Indexes.CreateManyAsync(new[]
             {
-                new CreateIndexModel<MongoRuleEventEntity>(
+                new CreateIndexModel<RuleEventEntity>(
                     Index.Ascending(x => x.NextAttempt)),
 
-                new CreateIndexModel<MongoRuleEventEntity>(
+                new CreateIndexModel<RuleEventEntity>(
                     Index.Ascending(x => x.AppId).Descending(x => x.Created)),
 
-                new CreateIndexModel<MongoRuleEventEntity>(
+                new CreateIndexModel<RuleEventEntity>(
                     Index
                         .Ascending(x => x.Expires),
                     new CreateIndexOptions
@@ -100,7 +100,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Rules
 
         public async Task EnqueueAsync(RuleJob job, Instant? nextAttempt)
         {
-            var entity = new MongoRuleEventEntity { Job = job, Created = job.Created, NextAttempt = nextAttempt };
+            var entity = new RuleEventEntity { Job = job, Created = job.Created, NextAttempt = nextAttempt };
 
             SimpleMapper.Map(job, entity);
 

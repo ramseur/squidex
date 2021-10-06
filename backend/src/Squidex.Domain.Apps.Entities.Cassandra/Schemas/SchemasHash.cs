@@ -20,7 +20,7 @@ using Squidex.Infrastructure.ObjectPool;
 
 namespace Squidex.Domain.Apps.Entities.Cassandra.Schemas
 {
-    public sealed class MongoSchemasHash : MongoRepositoryBase<MongoSchemasHashEntity>, ISchemasHash, IEventConsumer
+    public sealed class SchemasHash : MongoRepositoryBase<SchemasHashEntity>, ISchemasHash, IEventConsumer
     {
         public int BatchSize
         {
@@ -42,7 +42,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Schemas
             get => "^schema-";
         }
 
-        public MongoSchemasHash(IMongoDatabase database, bool setup = false)
+        public SchemasHash(IMongoDatabase database, bool setup = false)
             : base(database, setup)
         {
         }
@@ -54,7 +54,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Schemas
 
         public Task On(IEnumerable<Envelope<IEvent>> events)
         {
-            var writes = new List<WriteModel<MongoSchemasHashEntity>>();
+            var writes = new List<WriteModel<SchemasHashEntity>>();
 
             foreach (var @event in events)
             {
@@ -66,7 +66,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Schemas
                 if (@event.Payload is SchemaEvent schemaEvent)
                 {
                     writes.Add(
-                        new UpdateOneModel<MongoSchemasHashEntity>(
+                        new UpdateOneModel<SchemasHashEntity>(
                             Filter.Eq(x => x.AppId, schemaEvent.AppId.Id.ToString()),
                             Update
                                 .Set($"s.{schemaEvent.SchemaId.Id}", @event.Headers.EventStreamNumber())

@@ -63,7 +63,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Contents.Operations
             return ResultList.Create(contentTotal, contentEntities);
         }
 
-        private async Task<List<MongoContentEntity>> FindContentsAsync(ClrQuery query, FilterDefinition<MongoContentEntity> filter)
+        private async Task<List<ContentEntity>> FindContentsAsync(ClrQuery query, FilterDefinition<ContentEntity> filter)
         {
             var result =
                 Collection.Find(filter)
@@ -74,9 +74,9 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Contents.Operations
             return await result;
         }
 
-        private static FilterDefinition<MongoContentEntity> CreateFilter(DomainId appId, IEnumerable<DomainId>? schemaIds, HashSet<DomainId> ids)
+        private static FilterDefinition<ContentEntity> CreateFilter(DomainId appId, IEnumerable<DomainId>? schemaIds, HashSet<DomainId> ids)
         {
-            var filters = new List<FilterDefinition<MongoContentEntity>>();
+            var filters = new List<FilterDefinition<ContentEntity>>();
 
             var documentIds = ids.Select(x => DomainId.Combine(appId, x)).ToList();
 

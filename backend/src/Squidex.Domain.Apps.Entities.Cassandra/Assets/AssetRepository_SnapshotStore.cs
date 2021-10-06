@@ -20,11 +20,11 @@ using Squidex.Infrastructure.States;
 
 namespace Squidex.Domain.Apps.Entities.Cassandra.Assets
 {
-    public sealed partial class MongoAssetRepository : ISnapshotStore<AssetDomainObject.State>
+    public sealed partial class AssetRepository : ISnapshotStore<AssetDomainObject.State>
     {
         async Task<(AssetDomainObject.State Value, bool Valid, long Version)> ISnapshotStore<AssetDomainObject.State>.ReadAsync(DomainId key)
         {
-            using (Telemetry.Activities.StartMethod<MongoAssetRepository>())
+            using (Telemetry.Activities.StartMethod<AssetRepository>())
             {
                 var existing =
                     await Collection.Find(x => x.DocumentId == key)
@@ -41,7 +41,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Assets
 
         async Task ISnapshotStore<AssetDomainObject.State>.WriteAsync(DomainId key, AssetDomainObject.State value, long oldVersion, long newVersion)
         {
-            using (Telemetry.Activities.StartMethod<MongoAssetRepository>())
+            using (Telemetry.Activities.StartMethod<AssetRepository>())
             {
                 var entity = Map(value);
 
@@ -51,10 +51,10 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Assets
 
         async Task ISnapshotStore<AssetDomainObject.State>.WriteManyAsync(IEnumerable<(DomainId Key, AssetDomainObject.State Value, long Version)> snapshots)
         {
-            using (Telemetry.Activities.StartMethod<MongoAssetFolderRepository>())
+            using (Telemetry.Activities.StartMethod<AssetFolderRepository>())
             {
                 var updates = snapshots.Select(Map).Select(x =>
-                    new ReplaceOneModel<MongoAssetEntity>(
+                    new ReplaceOneModel<AssetEntity>(
                         Filter.Eq(y => y.DocumentId, x.DocumentId),
                         x)
                     {
@@ -73,7 +73,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Assets
         async Task ISnapshotStore<AssetDomainObject.State>.ReadAllAsync(Func<AssetDomainObject.State, long, Task> callback,
             CancellationToken ct)
         {
-            using (Telemetry.Activities.StartMethod<MongoAssetRepository>())
+            using (Telemetry.Activities.StartMethod<AssetRepository>())
             {
                 await Collection.Find(new BsonDocument(), Batching.Options).ForEachAsync(x => callback(Map(x), x.Version), ct);
             }
@@ -81,22 +81,22 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Assets
 
         async Task ISnapshotStore<AssetDomainObject.State>.RemoveAsync(DomainId key)
         {
-            using (Telemetry.Activities.StartMethod<MongoAssetRepository>())
+            using (Telemetry.Activities.StartMethod<AssetRepository>())
             {
                 await Collection.DeleteOneAsync(x => x.DocumentId == key);
             }
         }
 
-        private static MongoAssetEntity Map(AssetDomainObject.State value)
+        private static AssetEntity Map(AssetDomainObject.State value)
         {
-            var entity = SimpleMapper.Map(value, new MongoAssetEntity());
+            var entity = SimpleMapper.Map(value, new AssetEntity());
 
             entity.IndexedAppId = value.AppId.Id;
 
             return entity;
         }
 
-        private static MongoAssetEntity Map((DomainId Key, AssetDomainObject.State Value, long Version) snapshot)
+        private static AssetEntity Map((DomainId Key, AssetDomainObject.State Value, long Version) snapshot)
         {
             var entity = Map(snapshot.Value);
 
@@ -105,7 +105,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Assets
             return entity;
         }
 
-        private static AssetDomainObject.State Map(MongoAssetEntity existing)
+        private static AssetDomainObject.State Map(AssetEntity existing)
         {
             return SimpleMapper.Map(existing, new AssetDomainObject.State());
         }

@@ -16,9 +16,9 @@ using Squidex.Infrastructure.MongoDb;
 
 namespace Squidex.Domain.Apps.Entities.Cassandra.FullText
 {
-    public sealed class MongoTextIndexerState : MongoRepositoryBase<TextContentState>, ITextIndexerState
+    public sealed class TextIndexerState : MongoRepositoryBase<TextContentState>, ITextIndexerState
     {
-        static MongoTextIndexerState()
+        static TextIndexerState()
         {
             BsonClassMap.RegisterClassMap<TextContentState>(cm =>
             {
@@ -35,7 +35,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.FullText
             });
         }
 
-        public MongoTextIndexerState(IMongoDatabase database, bool setup = false)
+        public TextIndexerState(IMongoDatabase database, bool setup = false)
             : base(database, setup)
         {
         }

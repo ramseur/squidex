@@ -18,7 +18,7 @@ using Squidex.Infrastructure.States;
 
 namespace Squidex.Domain.Apps.Entities.Cassandra.Contents
 {
-    public partial class MongoContentRepository : ISnapshotStore<ContentDomainObject.State>
+    public partial class ContentRepository : ISnapshotStore<ContentDomainObject.State>
     {
         Task ISnapshotStore<ContentDomainObject.State>.ReadAllAsync(Func<ContentDomainObject.State, long, Task> callback,
             CancellationToken ct)
@@ -28,7 +28,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Contents
 
         async Task<(ContentDomainObject.State Value, bool Valid, long Version)> ISnapshotStore<ContentDomainObject.State>.ReadAsync(DomainId key)
         {
-            using (Telemetry.Activities.StartMethod<MongoContentRepository>())
+            using (Telemetry.Activities.StartMethod<ContentRepository>())
             {
                 var version = await collectionAll.FindVersionAsync(key);
 
@@ -38,7 +38,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Contents
 
         async Task ISnapshotStore<ContentDomainObject.State>.ClearAsync()
         {
-            using (Telemetry.Activities.StartMethod<MongoContentRepository>())
+            using (Telemetry.Activities.StartMethod<ContentRepository>())
             {
                 await collectionAll.ClearAsync();
                 await collectionPublished.ClearAsync();
@@ -47,7 +47,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Contents
 
         async Task ISnapshotStore<ContentDomainObject.State>.RemoveAsync(DomainId key)
         {
-            using (Telemetry.Activities.StartMethod<MongoContentRepository>())
+            using (Telemetry.Activities.StartMethod<ContentRepository>())
             {
                 await collectionAll.RemoveAsync(key);
                 await collectionPublished.RemoveAsync(key);
@@ -56,7 +56,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Contents
 
         async Task ISnapshotStore<ContentDomainObject.State>.WriteAsync(DomainId key, ContentDomainObject.State value, long oldVersion, long newVersion)
         {
-            using (Telemetry.Activities.StartMethod<MongoContentRepository>())
+            using (Telemetry.Activities.StartMethod<ContentRepository>())
             {
                 if (value.SchemaId.Id == DomainId.Empty)
                 {
@@ -71,10 +71,10 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Contents
 
         async Task ISnapshotStore<ContentDomainObject.State>.WriteManyAsync(IEnumerable<(DomainId Key, ContentDomainObject.State Value, long Version)> snapshots)
         {
-            using (Telemetry.Activities.StartMethod<MongoContentRepository>())
+            using (Telemetry.Activities.StartMethod<ContentRepository>())
             {
-                var entitiesPublished = new List<MongoContentEntity>();
-                var entitiesAll = new List<MongoContentEntity>();
+                var entitiesPublished = new List<ContentEntity>();
+                var entitiesAll = new List<ContentEntity>();
 
                 foreach (var (_, value, version) in snapshots)
                 {
@@ -125,7 +125,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Contents
             await collectionPublished.UpsertVersionedAsync(entity.DocumentId, oldVersion, entity);
         }
 
-        private async Task<MongoContentEntity> CreatePublishedContentAsync(ContentDomainObject.State value, long newVersion)
+        private async Task<ContentEntity> CreatePublishedContentAsync(ContentDomainObject.State value, long newVersion)
         {
             var entity = await CreateContentAsync(value, value.CurrentVersion.Data, newVersion);
 
@@ -136,7 +136,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Contents
             return entity;
         }
 
-        private async Task<MongoContentEntity> CreateDraftContentAsync(ContentDomainObject.State value, long newVersion)
+        private async Task<ContentEntity> CreateDraftContentAsync(ContentDomainObject.State value, long newVersion)
         {
             var entity = await CreateContentAsync(value, value.Data, newVersion);
 
@@ -147,9 +147,9 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Contents
             return entity;
         }
 
-        private async Task<MongoContentEntity> CreateContentAsync(ContentDomainObject.State value, ContentData data, long newVersion)
+        private async Task<ContentEntity> CreateContentAsync(ContentDomainObject.State value, ContentData data, long newVersion)
         {
-            var entity = SimpleMapper.Map(value, new MongoContentEntity());
+            var entity = SimpleMapper.Map(value, new ContentEntity());
 
             entity.Data = data;
             entity.DocumentId = value.UniqueId;

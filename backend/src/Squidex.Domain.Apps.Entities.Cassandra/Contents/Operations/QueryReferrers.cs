@@ -16,9 +16,9 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Contents.Operations
 {
     internal sealed class QueryReferrers : OperationBase
     {
-        public override IEnumerable<CreateIndexModel<MongoContentEntity>> CreateIndexes()
+        public override IEnumerable<CreateIndexModel<ContentEntity>> CreateIndexes()
         {
-            yield return new CreateIndexModel<MongoContentEntity>(Index
+            yield return new CreateIndexModel<ContentEntity>(Index
                 .Ascending(x => x.ReferencedIds)
                 .Ascending(x => x.IndexedAppId)
                 .Ascending(x => x.IsDeleted));

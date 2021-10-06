@@ -17,7 +17,7 @@ using Squidex.Infrastructure.MongoDb;
 namespace Squidex.Domain.Apps.Entities.Cassandra.Rules
 {
     [BsonIgnoreExtraElements]
-    public sealed class MongoRuleEventEntity : IRuleEventEntity
+    public sealed class RuleEventEntity : IRuleEventEntity
     {
         [BsonId]
         [BsonElement]

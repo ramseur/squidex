@@ -16,7 +16,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Assets.Visitors
 {
     public static class FindExtensions
     {
-        private static readonly FilterDefinitionBuilder<MongoAssetEntity> Filter = Builders<MongoAssetEntity>.Filter;
+        private static readonly FilterDefinitionBuilder<AssetEntity> Filter = Builders<AssetEntity>.Filter;
 
         public static ClrQuery AdjustToModel(this ClrQuery query, DomainId appId)
         {
@@ -38,9 +38,9 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Assets.Visitors
             return query;
         }
 
-        public static FilterDefinition<MongoAssetEntity> BuildFilter(this ClrQuery query, DomainId appId, DomainId? parentId)
+        public static FilterDefinition<AssetEntity> BuildFilter(this ClrQuery query, DomainId appId, DomainId? parentId)
         {
-            var filters = new List<FilterDefinition<MongoAssetEntity>>
+            var filters = new List<FilterDefinition<AssetEntity>>
             {
                 Filter.Exists(x => x.LastModified),
                 Filter.Exists(x => x.Id),
@@ -67,7 +67,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Assets.Visitors
                 }
             }
 
-            var (filter, last) = query.BuildFilter<MongoAssetEntity>(false);
+            var (filter, last) = query.BuildFilter<AssetEntity>(false);
 
             if (filter != null)
             {

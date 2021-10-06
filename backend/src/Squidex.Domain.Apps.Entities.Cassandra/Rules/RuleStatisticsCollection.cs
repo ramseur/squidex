@@ -17,9 +17,9 @@ using Squidex.Infrastructure.MongoDb;
 
 namespace Squidex.Domain.Apps.Entities.Cassandra.Rules
 {
-    public sealed class MongoRuleStatisticsCollection : MongoRepositoryBase<RuleStatistics>
+    public sealed class RuleStatisticsCollection : MongoRepositoryBase<RuleStatistics>
     {
-        static MongoRuleStatisticsCollection()
+        static RuleStatisticsCollection()
         {
             BsonClassMap.RegisterClassMap<RuleStatistics>(cm =>
             {
@@ -29,7 +29,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Rules
             });
         }
 
-        public MongoRuleStatisticsCollection(IMongoDatabase database)
+        public RuleStatisticsCollection(IMongoDatabase database)
             : base(database)
         {
         }

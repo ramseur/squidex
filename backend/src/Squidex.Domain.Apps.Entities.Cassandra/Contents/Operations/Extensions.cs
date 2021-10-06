@@ -36,10 +36,10 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Contents.Operations
             public Status Status { get; set; }
         }
 
-        public static Task<List<StatusModel>> FindStatusAsync(this IMongoCollection<MongoContentEntity> collection, FilterDefinition<MongoContentEntity> filter,
+        public static Task<List<StatusModel>> FindStatusAsync(this IMongoCollection<ContentEntity> collection, FilterDefinition<ContentEntity> filter,
             CancellationToken ct)
         {
-            var projections = Builders<MongoContentEntity>.Projection;
+            var projections = Builders<ContentEntity>.Projection;
 
             return collection.Find(filter)
                 .Project<StatusModel>(projections

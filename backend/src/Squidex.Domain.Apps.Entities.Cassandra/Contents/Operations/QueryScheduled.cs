@@ -21,9 +21,9 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Contents.Operations
 {
     internal sealed class QueryScheduled : OperationBase
     {
-        public override IEnumerable<CreateIndexModel<MongoContentEntity>> CreateIndexes()
+        public override IEnumerable<CreateIndexModel<ContentEntity>> CreateIndexes()
         {
-            yield return new CreateIndexModel<MongoContentEntity>(Index
+            yield return new CreateIndexModel<ContentEntity>(Index
                 .Ascending(x => x.ScheduledAt)
                 .Ascending(x => x.IsDeleted)
                 .Ascending(x => x.IndexedAppId)
@@ -60,7 +60,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Contents.Operations
                 }, ct);
         }
 
-        private static FilterDefinition<MongoContentEntity> CreateFilter(DomainId appId, IEnumerable<DomainId> schemaIds, Instant scheduledFrom, Instant scheduledTo)
+        private static FilterDefinition<ContentEntity> CreateFilter(DomainId appId, IEnumerable<DomainId> schemaIds, Instant scheduledFrom, Instant scheduledTo)
         {
             return Filter.And(
                 Filter.Gte(x => x.ScheduledAt, scheduledFrom),

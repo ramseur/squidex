@@ -18,9 +18,9 @@ using Squidex.Infrastructure.MongoDb;
 
 namespace Squidex.Domain.Apps.Entities.Cassandra.History
 {
-    public class MongoHistoryEventRepository : MongoRepositoryBase<HistoryEvent>, IHistoryEventRepository
+    public class HistoryEventRepository : MongoRepositoryBase<HistoryEvent>, IHistoryEventRepository
     {
-        static MongoHistoryEventRepository()
+        static HistoryEventRepository()
         {
             BsonClassMap.RegisterClassMap<HistoryEvent>(cm =>
             {
@@ -31,7 +31,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.History
             });
         }
 
-        public MongoHistoryEventRepository(IMongoDatabase database)
+        public HistoryEventRepository(IMongoDatabase database)
             : base(database)
         {
         }

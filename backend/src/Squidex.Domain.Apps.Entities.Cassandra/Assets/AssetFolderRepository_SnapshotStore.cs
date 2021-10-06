@@ -20,11 +20,11 @@ using Squidex.Infrastructure.States;
 
 namespace Squidex.Domain.Apps.Entities.Cassandra.Assets
 {
-    public sealed partial class MongoAssetFolderRepository : ISnapshotStore<AssetFolderDomainObject.State>
+    public sealed partial class AssetFolderRepository : ISnapshotStore<AssetFolderDomainObject.State>
     {
         async Task<(AssetFolderDomainObject.State Value, bool Valid, long Version)> ISnapshotStore<AssetFolderDomainObject.State>.ReadAsync(DomainId key)
         {
-            using (Telemetry.Activities.StartMethod<MongoAssetFolderRepository>())
+            using (Telemetry.Activities.StartMethod<AssetFolderRepository>())
             {
                 var existing =
                     await Collection.Find(x => x.DocumentId == key)
@@ -41,7 +41,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Assets
 
         async Task ISnapshotStore<AssetFolderDomainObject.State>.WriteAsync(DomainId key, AssetFolderDomainObject.State value, long oldVersion, long newVersion)
         {
-            using (Telemetry.Activities.StartMethod<MongoAssetFolderRepository>())
+            using (Telemetry.Activities.StartMethod<AssetFolderRepository>())
             {
                 var entity = Map(value);
 
@@ -51,10 +51,10 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Assets
 
         async Task ISnapshotStore<AssetFolderDomainObject.State>.WriteManyAsync(IEnumerable<(DomainId Key, AssetFolderDomainObject.State Value, long Version)> snapshots)
         {
-            using (Telemetry.Activities.StartMethod<MongoAssetFolderRepository>())
+            using (Telemetry.Activities.StartMethod<AssetFolderRepository>())
             {
                 var updates = snapshots.Select(Map).Select(x =>
-                    new ReplaceOneModel<MongoAssetFolderEntity>(
+                    new ReplaceOneModel<AssetFolderEntity>(
                         Filter.Eq(y => y.DocumentId, x.DocumentId),
                         x)
                     {
@@ -73,7 +73,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Assets
         async Task ISnapshotStore<AssetFolderDomainObject.State>.ReadAllAsync(Func<AssetFolderDomainObject.State, long, Task> callback,
             CancellationToken ct)
         {
-            using (Telemetry.Activities.StartMethod<MongoAssetFolderRepository>())
+            using (Telemetry.Activities.StartMethod<AssetFolderRepository>())
             {
                 await Collection.Find(new BsonDocument(), Batching.Options).ForEachAsync(x => callback(Map(x), x.Version), ct);
             }
@@ -81,22 +81,22 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Assets
 
         async Task ISnapshotStore<AssetFolderDomainObject.State>.RemoveAsync(DomainId key)
         {
-            using (Telemetry.Activities.StartMethod<MongoAssetFolderRepository>())
+            using (Telemetry.Activities.StartMethod<AssetFolderRepository>())
             {
                 await Collection.DeleteOneAsync(x => x.DocumentId == key);
             }
         }
 
-        private static MongoAssetFolderEntity Map(AssetFolderDomainObject.State value)
+        private static AssetFolderEntity Map(AssetFolderDomainObject.State value)
         {
-            var entity = SimpleMapper.Map(value, new MongoAssetFolderEntity());
+            var entity = SimpleMapper.Map(value, new AssetFolderEntity());
 
             entity.IndexedAppId = value.AppId.Id;
 
             return entity;
         }
 
-        private static MongoAssetFolderEntity Map((DomainId Key, AssetFolderDomainObject.State Value, long Version) snapshot)
+        private static AssetFolderEntity Map((DomainId Key, AssetFolderDomainObject.State Value, long Version) snapshot)
         {
             var entity = Map(snapshot.Value);
 
@@ -105,7 +105,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Assets
             return entity;
         }
 
-        private static AssetFolderDomainObject.State Map(MongoAssetFolderEntity existing)
+        private static AssetFolderDomainObject.State Map(AssetFolderEntity existing)
         {
             return SimpleMapper.Map(existing, new AssetFolderDomainObject.State());
         }

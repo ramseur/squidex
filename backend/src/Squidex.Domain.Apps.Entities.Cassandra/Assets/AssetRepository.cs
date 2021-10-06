@@ -21,14 +21,14 @@ using Squidex.Infrastructure.Translations;
 
 namespace Squidex.Domain.Apps.Entities.Cassandra.Assets
 {
-    public sealed partial class MongoAssetRepository : MongoRepositoryBase<MongoAssetEntity>, IAssetRepository
+    public sealed partial class AssetRepository : MongoRepositoryBase<AssetEntity>, IAssetRepository
     {
-        public MongoAssetRepository(IMongoDatabase database)
+        public AssetRepository(IMongoDatabase database)
             : base(database)
         {
         }
 
-        public IMongoCollection<MongoAssetEntity> GetInternalCollection()
+        public IMongoCollection<AssetEntity> GetInternalCollection()
         {
             return Collection;
         }
@@ -38,12 +38,12 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Assets
             return "States_Assets2";
         }
 
-        protected override Task SetupCollectionAsync(IMongoCollection<MongoAssetEntity> collection,
+        protected override Task SetupCollectionAsync(IMongoCollection<AssetEntity> collection,
             CancellationToken ct = default)
         {
             return collection.Indexes.CreateManyAsync(new[]
             {
-                new CreateIndexModel<MongoAssetEntity>(
+                new CreateIndexModel<AssetEntity>(
                     Index
                         .Descending(x => x.LastModified)
                         .Ascending(x => x.Id)
@@ -51,19 +51,19 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Assets
                         .Ascending(x => x.IsDeleted)
                         .Ascending(x => x.ParentId)
                         .Ascending(x => x.Tags)),
-                new CreateIndexModel<MongoAssetEntity>(
+                new CreateIndexModel<AssetEntity>(
                     Index
                         .Ascending(x => x.IndexedAppId)
                         .Ascending(x => x.IsDeleted)
                         .Ascending(x => x.Slug)),
-                new CreateIndexModel<MongoAssetEntity>(
+                new CreateIndexModel<AssetEntity>(
                     Index
                         .Ascending(x => x.IndexedAppId)
                         .Ascending(x => x.IsDeleted)
                         .Ascending(x => x.FileHash)
                         .Ascending(x => x.FileName)
                         .Ascending(x => x.FileSize)),
-                new CreateIndexModel<MongoAssetEntity>(
+                new CreateIndexModel<AssetEntity>(
                     Index
                         .Ascending(x => x.Id)
                         .Ascending(x => x.IsDeleted))
@@ -90,7 +90,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Assets
         public async Task<IResultList<IAssetEntity>> QueryAsync(DomainId appId, DomainId? parentId, Q q,
             CancellationToken ct = default)
         {
-            using (Telemetry.Activities.StartMethod<MongoAssetRepository>("QueryAsyncByQuery"))
+            using (Telemetry.Activities.StartMethod<AssetRepository>("QueryAsyncByQuery"))
             {
                 try
                 {
@@ -152,13 +152,13 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Assets
         public async Task<IReadOnlyList<DomainId>> QueryIdsAsync(DomainId appId, HashSet<DomainId> ids,
             CancellationToken ct = default)
         {
-            using (Telemetry.Activities.StartMethod<MongoAssetRepository>("QueryAsyncByIds"))
+            using (Telemetry.Activities.StartMethod<AssetRepository>("QueryAsyncByIds"))
             {
                 var assetEntities =
                     await Collection.Find(BuildFilter(appId, ids)).Only(x => x.Id)
                         .ToListAsync(ct);
 
-                var field = Field.Of<MongoAssetFolderEntity>(x => nameof(x.Id));
+                var field = Field.Of<AssetFolderEntity>(x => nameof(x.Id));
 
                 return assetEntities.Select(x => DomainId.Create(x[field].AsString)).ToList();
             }
@@ -167,13 +167,13 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Assets
         public async Task<IReadOnlyList<DomainId>> QueryChildIdsAsync(DomainId appId, DomainId parentId,
             CancellationToken ct = default)
         {
-            using (Telemetry.Activities.StartMethod<MongoAssetRepository>())
+            using (Telemetry.Activities.StartMethod<AssetRepository>())
             {
                 var assetEntities =
                     await Collection.Find(x => x.IndexedAppId == appId && !x.IsDeleted && x.ParentId == parentId).Only(x => x.Id)
                         .ToListAsync(ct);
 
-                var field = Field.Of<MongoAssetFolderEntity>(x => nameof(x.Id));
+                var field = Field.Of<AssetFolderEntity>(x => nameof(x.Id));
 
                 return assetEntities.Select(x => DomainId.Create(x[field].AsString)).ToList();
             }
@@ -182,7 +182,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Assets
         public async Task<IAssetEntity?> FindAssetByHashAsync(DomainId appId, string hash, string fileName, long fileSize,
             CancellationToken ct = default)
         {
-            using (Telemetry.Activities.StartMethod<MongoAssetRepository>())
+            using (Telemetry.Activities.StartMethod<AssetRepository>())
             {
                 var assetEntity =
                     await Collection.Find(x => x.IndexedAppId == appId && !x.IsDeleted && x.FileHash == hash && x.FileName == fileName && x.FileSize == fileSize)
@@ -195,7 +195,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Assets
         public async Task<IAssetEntity?> FindAssetBySlugAsync(DomainId appId, string slug,
             CancellationToken ct = default)
         {
-            using (Telemetry.Activities.StartMethod<MongoAssetRepository>())
+            using (Telemetry.Activities.StartMethod<AssetRepository>())
             {
                 var assetEntity =
                     await Collection.Find(x => x.IndexedAppId == appId && !x.IsDeleted && x.Slug == slug)
@@ -208,7 +208,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Assets
         public async Task<IAssetEntity?> FindAssetAsync(DomainId appId, DomainId id,
             CancellationToken ct = default)
         {
-            using (Telemetry.Activities.StartMethod<MongoAssetRepository>())
+            using (Telemetry.Activities.StartMethod<AssetRepository>())
             {
                 var documentId = DomainId.Combine(appId, id);
 
@@ -223,7 +223,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Assets
         public async Task<IAssetEntity?> FindAssetAsync(DomainId id,
             CancellationToken ct = default)
         {
-            using (Telemetry.Activities.StartMethod<MongoAssetRepository>())
+            using (Telemetry.Activities.StartMethod<AssetRepository>())
             {
                 var assetEntity =
                     await Collection.Find(x => x.Id == id && !x.IsDeleted)
@@ -233,7 +233,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Assets
             }
         }
 
-        private static FilterDefinition<MongoAssetEntity> BuildFilter(DomainId appId, HashSet<DomainId> ids)
+        private static FilterDefinition<AssetEntity> BuildFilter(DomainId appId, HashSet<DomainId> ids)
         {
             var documentIds = ids.Select(x => DomainId.Combine(appId, x));
 

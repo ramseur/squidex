@@ -12,7 +12,7 @@ using NodaTime;
 namespace Squidex.Domain.Apps.Entities.Cassandra.Schemas
 {
     [BsonIgnoreExtraElements]
-    public sealed class MongoSchemasHashEntity
+    public sealed class SchemasHashEntity
     {
         [BsonId]
         [BsonElement]

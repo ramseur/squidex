@@ -9,7 +9,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace Squidex.Domain.Apps.Entities.Cassandra.FullText
 {
-    public sealed class MongoTextIndexEntityText
+    public sealed class TextIndexEntityText
     {
         [BsonRequired]
         [BsonElement("t")]
@@ -19,9 +19,9 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.FullText
         [BsonElement("language")]
         public string Language { get; set; } = "none";
 
-        public static MongoTextIndexEntityText FromText(string text)
+        public static TextIndexEntityText FromText(string text)
         {
-            return new MongoTextIndexEntityText { Text = text };
+            return new TextIndexEntityText { Text = text };
         }
     }
 }

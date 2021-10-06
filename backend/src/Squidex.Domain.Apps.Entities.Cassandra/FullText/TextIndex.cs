@@ -19,26 +19,26 @@ using Squidex.Infrastructure.Tasks;
 
 namespace Squidex.Domain.Apps.Entities.Cassandra.FullText
 {
-    public sealed class MongoTextIndex : MongoRepositoryBase<MongoTextIndexEntity>, ITextIndex
+    public sealed class TextIndex : MongoRepositoryBase<TextIndexEntity>, ITextIndex
     {
         private const int Limit = 2000;
         private const int LimitHalf = 1000;
         private static readonly List<DomainId> EmptyResults = new List<DomainId>();
 
-        public MongoTextIndex(IMongoDatabase database, bool setup = false)
+        public TextIndex(IMongoDatabase database, bool setup = false)
             : base(database, setup)
         {
         }
 
-        protected override Task SetupCollectionAsync(IMongoCollection<MongoTextIndexEntity> collection,
+        protected override Task SetupCollectionAsync(IMongoCollection<TextIndexEntity> collection,
             CancellationToken ct)
         {
             return collection.Indexes.CreateManyAsync(new[]
             {
-                new CreateIndexModel<MongoTextIndexEntity>(
+                new CreateIndexModel<TextIndexEntity>(
                     Index.Ascending(x => x.DocId)),
 
-                new CreateIndexModel<MongoTextIndexEntity>(
+                new CreateIndexModel<TextIndexEntity>(
                     Index
                         .Text("t.t")
                         .Ascending(x => x.AppId)
@@ -46,7 +46,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.FullText
                         .Ascending(x => x.ServePublished)
                         .Ascending(x => x.SchemaId)),
 
-                new CreateIndexModel<MongoTextIndexEntity>(
+                new CreateIndexModel<TextIndexEntity>(
                     Index
                         .Ascending(x => x.AppId)
                         .Ascending(x => x.ServeAll)
@@ -64,7 +64,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.FullText
 
         public Task ExecuteAsync(params IndexCommand[] commands)
         {
-            var writes = new List<WriteModel<MongoTextIndexEntity>>(commands.Length);
+            var writes = new List<WriteModel<TextIndexEntity>>(commands.Length);
 
             foreach (var command in commands)
             {
@@ -91,7 +91,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.FullText
                     .Limit(Limit).Only(x => x.ContentId)
                     .ToListAsync();
 
-            var field = Field.Of<MongoTextIndexEntity>(x => nameof(x.ContentId));
+            var field = Field.Of<TextIndexEntity>(x => nameof(x.ContentId));
 
             return byGeo.Select(x => DomainId.Create(x[field].AsString)).Distinct().ToList();
         }
@@ -135,7 +135,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.FullText
                     .Limit(limit).Only(x => x.ContentId)
                     .ToListAsync();
 
-            var field = Field.Of<MongoTextIndexEntity>(x => nameof(x.ContentId));
+            var field = Field.Of<TextIndexEntity>(x => nameof(x.ContentId));
 
             return bySchema.Select(x => DomainId.Create(x[field].AsString)).Distinct().ToList();
         }
@@ -152,12 +152,12 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.FullText
                     .Limit(limit).Only(x => x.ContentId)
                     .ToListAsync();
 
-            var field = Field.Of<MongoTextIndexEntity>(x => nameof(x.ContentId));
+            var field = Field.Of<TextIndexEntity>(x => nameof(x.ContentId));
 
             return bySchema.Select(x => DomainId.Create(x[field].AsString)).Distinct().ToList();
         }
 
-        private static FilterDefinition<MongoTextIndexEntity> Filter_ByScope(SearchScope scope)
+        private static FilterDefinition<TextIndexEntity> Filter_ByScope(SearchScope scope)
         {
             if (scope == SearchScope.All)
             {
@@ -169,7 +169,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.FullText
             }
         }
 
-        private IMongoCollection<MongoTextIndexEntity> GetCollection(SearchScope scope)
+        private IMongoCollection<TextIndexEntity> GetCollection(SearchScope scope)
         {
             if (scope == SearchScope.All)
             {

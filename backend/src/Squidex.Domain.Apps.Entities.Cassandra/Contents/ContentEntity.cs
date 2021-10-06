@@ -16,7 +16,7 @@ using Squidex.Infrastructure.MongoDb;
 namespace Squidex.Domain.Apps.Entities.Cassandra.Contents
 {
     [BsonIgnoreExtraElements]
-    public sealed class MongoContentEntity : IContentEntity, IVersionedEntity<DomainId>
+    public sealed class ContentEntity : IContentEntity, IVersionedEntity<DomainId>
     {
         [BsonId]
         [BsonElement("_id")]
