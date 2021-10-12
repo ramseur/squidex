@@ -5,6 +5,7 @@
 //  All rights reserved. Licensed under the MIT license.
 // ==========================================================================
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -39,7 +40,7 @@ namespace Squidex.Domain.Apps.Entities.MongoDb.Assets
         }
 
         protected override Task SetupCollectionAsync(IMongoCollection<MongoAssetEntity> collection,
-            CancellationToken ct = default)
+            CancellationToken ct)
         {
             return collection.Indexes.CreateManyAsync(new[]
             {
@@ -90,7 +91,7 @@ namespace Squidex.Domain.Apps.Entities.MongoDb.Assets
         public async Task<IResultList<IAssetEntity>> QueryAsync(DomainId appId, DomainId? parentId, Q q,
             CancellationToken ct = default)
         {
-            using (Telemetry.Activities.StartMethod<MongoAssetRepository>("QueryAsyncByQuery"))
+            using (Telemetry.Activities.StartActivity("ContentQueryService/QueryAsync"))
             {
                 try
                 {
@@ -142,7 +143,7 @@ namespace Squidex.Domain.Apps.Entities.MongoDb.Assets
                         return ResultList.Create<IAssetEntity>(assetTotal, assetEntities);
                     }
                 }
-                catch (MongoQueryException ex) when (ex.Message.Contains("17406"))
+                catch (MongoQueryException ex) when (ex.Message.Contains("17406", StringComparison.Ordinal))
                 {
                     throw new DomainException(T.Get("common.resultTooLarge"));
                 }
@@ -152,7 +153,7 @@ namespace Squidex.Domain.Apps.Entities.MongoDb.Assets
         public async Task<IReadOnlyList<DomainId>> QueryIdsAsync(DomainId appId, HashSet<DomainId> ids,
             CancellationToken ct = default)
         {
-            using (Telemetry.Activities.StartMethod<MongoAssetRepository>("QueryAsyncByIds"))
+            using (Telemetry.Activities.StartActivity("ContentQueryService/QueryIdsAsync"))
             {
                 var assetEntities =
                     await Collection.Find(BuildFilter(appId, ids)).Only(x => x.Id)
@@ -167,7 +168,7 @@ namespace Squidex.Domain.Apps.Entities.MongoDb.Assets
         public async Task<IReadOnlyList<DomainId>> QueryChildIdsAsync(DomainId appId, DomainId parentId,
             CancellationToken ct = default)
         {
-            using (Telemetry.Activities.StartMethod<MongoAssetRepository>())
+            using (Telemetry.Activities.StartActivity("ContentQueryService/QueryChildIdsAsync"))
             {
                 var assetEntities =
                     await Collection.Find(x => x.IndexedAppId == appId && !x.IsDeleted && x.ParentId == parentId).Only(x => x.Id)
@@ -182,7 +183,7 @@ namespace Squidex.Domain.Apps.Entities.MongoDb.Assets
         public async Task<IAssetEntity?> FindAssetByHashAsync(DomainId appId, string hash, string fileName, long fileSize,
             CancellationToken ct = default)
         {
-            using (Telemetry.Activities.StartMethod<MongoAssetRepository>())
+            using (Telemetry.Activities.StartActivity("ContentQueryService/FindAssetByHashAsync"))
             {
                 var assetEntity =
                     await Collection.Find(x => x.IndexedAppId == appId && !x.IsDeleted && x.FileHash == hash && x.FileName == fileName && x.FileSize == fileSize)
@@ -195,7 +196,7 @@ namespace Squidex.Domain.Apps.Entities.MongoDb.Assets
         public async Task<IAssetEntity?> FindAssetBySlugAsync(DomainId appId, string slug,
             CancellationToken ct = default)
         {
-            using (Telemetry.Activities.StartMethod<MongoAssetRepository>())
+            using (Telemetry.Activities.StartActivity("ContentQueryService/FindAssetBySlugAsync"))
             {
                 var assetEntity =
                     await Collection.Find(x => x.IndexedAppId == appId && !x.IsDeleted && x.Slug == slug)
@@ -208,7 +209,7 @@ namespace Squidex.Domain.Apps.Entities.MongoDb.Assets
         public async Task<IAssetEntity?> FindAssetAsync(DomainId appId, DomainId id,
             CancellationToken ct = default)
         {
-            using (Telemetry.Activities.StartMethod<MongoAssetRepository>())
+            using (Telemetry.Activities.StartActivity("ContentQueryService/FindAssetAsync"))
             {
                 var documentId = DomainId.Combine(appId, id);
 
@@ -223,7 +224,7 @@ namespace Squidex.Domain.Apps.Entities.MongoDb.Assets
         public async Task<IAssetEntity?> FindAssetAsync(DomainId id,
             CancellationToken ct = default)
         {
-            using (Telemetry.Activities.StartMethod<MongoAssetRepository>())
+            using (Telemetry.Activities.StartActivity("ContentQueryService/FindAssetAsync"))
             {
                 var assetEntity =
                     await Collection.Find(x => x.Id == id && !x.IsDeleted)

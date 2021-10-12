@@ -10,22 +10,11 @@ using Squidex.Domain.Apps.Entities.Schemas.Commands;
 
 namespace Squidex.Domain.Apps.Entities.Apps.Templates.Builders
 {
-    public class BooleanFieldBuilder : FieldBuilder<BooleanFieldBuilder>
+    public sealed class BooleanFieldBuilder : FieldBuilder<BooleanFieldBuilder, BooleanFieldProperties>
     {
-        public BooleanFieldBuilder(UpsertSchemaFieldBase field, CreateSchema schema)
-            : base(field, schema)
+        public BooleanFieldBuilder(UpsertSchemaFieldBase field, BooleanFieldProperties properties, CreateSchema schema)
+            : base(field, properties, schema)
         {
-        }
-
-        public BooleanFieldBuilder AsToggle()
-        {
-            Properties<BooleanFieldProperties>(p => p with
-            {
-                Editor = BooleanFieldEditor.Toggle,
-                EditorUrl = null
-            });
-
-            return this;
         }
     }
 }

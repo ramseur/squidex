@@ -95,10 +95,10 @@ namespace Squidex.Domain.Apps.Entities.Contents.DomainObject
 
             schema = Mocks.Schema(AppNamedId, SchemaNamedId, schemaDef);
 
-            A.CallTo(() => appProvider.GetAppAsync(AppName, false))
+            A.CallTo(() => appProvider.GetAppAsync(AppName, false, default))
                 .Returns(app);
 
-            A.CallTo(() => appProvider.GetAppWithSchemaAsync(AppId, SchemaId, false))
+            A.CallTo(() => appProvider.GetAppWithSchemaAsync(AppId, SchemaId, false, default))
                 .Returns((app, schema));
 
             A.CallTo(() => scriptEngine.TransformAsync(A<ScriptVars>._, A<string>._, ScriptOptions(), default))
@@ -120,7 +120,9 @@ namespace Squidex.Domain.Apps.Entities.Contents.DomainObject
                     .BuildServiceProvider();
 
             sut = new ContentDomainObject(PersistenceFactory, log, serviceProvider);
+#pragma warning disable MA0056 // Do not call overridable members in constructor
             sut.Setup(Id);
+#pragma warning restore MA0056 // Do not call overridable members in constructor
         }
 
         [Fact]
@@ -981,11 +983,12 @@ namespace Squidex.Domain.Apps.Entities.Contents.DomainObject
         private bool Matches(ScriptVars x, ContentData? newData, ContentData? oldData, Status newStatus, Status oldStatus)
         {
             return
-                Equals(x.Data, newData) &&
-                Equals(x.DataOld, oldData) &&
-                Equals(x.Status, newStatus) &&
-                Equals(x.StatusOld, oldStatus) &&
-                x.ContentId == contentId && x.User == User;
+                Equals(x["contentId"], contentId) &&
+                Equals(x["data"], newData) &&
+                Equals(x["dataOld"], oldData) &&
+                Equals(x["status"], newStatus) &&
+                Equals(x["statusOld"], oldStatus) &&
+                Equals(x["user"], User);
         }
 
         private T CreateContentEvent<T>(T @event) where T : ContentEvent

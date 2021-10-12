@@ -52,17 +52,14 @@ namespace Squidex.Areas.Frontend
                 return next();
             });
 
-            app.UseWhen(x => x.Request.Path.StartsWithSegments(indexFile), builder =>
+            app.UseWhen(x => x.Request.Path.StartsWithSegments(indexFile, StringComparison.Ordinal), builder =>
             {
                 builder.UseMiddleware<SetupMiddleware>();
             });
 
             app.UseMiddleware<IndexMiddleware>();
 
-            if (environment.IsDevelopment())
-            {
-                app.UseMiddleware<WebpackMiddleware>();
-            }
+            app.ConfigureDev();
 
             app.UseStaticFiles(new StaticFileOptions
             {
@@ -87,6 +84,16 @@ namespace Squidex.Areas.Frontend
                     }
                 }
             });
+        }
+
+        public static void ConfigureDev(this IApplicationBuilder app)
+        {
+            var environment = app.ApplicationServices.GetRequiredService<IWebHostEnvironment>();
+
+            if (environment.IsDevelopment())
+            {
+                app.UseMiddleware<WebpackMiddleware>();
+            }
         }
     }
 }

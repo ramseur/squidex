@@ -8,6 +8,7 @@
 using GraphQL;
 using GraphQL.Resolvers;
 using GraphQL.Types;
+using Squidex.Domain.Apps.Core;
 using Squidex.Domain.Apps.Entities.Assets;
 using Squidex.Infrastructure;
 
@@ -22,7 +23,7 @@ namespace Squidex.Domain.Apps.Entities.Contents.GraphQL.Types.Assets
                 new QueryArgument(AllTypes.String)
                 {
                     Name = "path",
-                    Description = "The path to the json value",
+                    Description = FieldDescriptions.JsonPath,
                     DefaultValue = null
                 }
             };
@@ -56,7 +57,8 @@ namespace Squidex.Domain.Apps.Entities.Contents.GraphQL.Types.Assets
             {
                 var assetId = fieldContext.GetArgument<DomainId>("id");
 
-                return await context.FindAssetAsync(assetId);
+                return await context.FindAssetAsync(assetId,
+                    fieldContext.CancellationToken);
             });
         }
 
@@ -96,7 +98,8 @@ namespace Squidex.Domain.Apps.Entities.Contents.GraphQL.Types.Assets
 
                 var q = Q.Empty.WithODataQuery(query).WithoutTotal();
 
-                return await context.QueryAssetsAsync(q);
+                return await context.QueryAssetsAsync(q,
+                    fieldContext.CancellationToken);
             });
 
             public static readonly IFieldResolver ResolverWithTotal = Resolvers.Async<object, object>(async (_, fieldContext, context) =>
@@ -105,7 +108,8 @@ namespace Squidex.Domain.Apps.Entities.Contents.GraphQL.Types.Assets
 
                 var q = Q.Empty.WithODataQuery(query);
 
-                return await context.QueryAssetsAsync(q);
+                return await context.QueryAssetsAsync(q,
+                    fieldContext.CancellationToken);
             });
         }
     }

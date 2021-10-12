@@ -47,14 +47,14 @@ namespace Squidex.Domain.Apps.Entities.Assets.Queries
             Guard.NotNull(context, nameof(context));
             Guard.NotNull(q, nameof(q));
 
-            using (Telemetry.Activities.StartMethod<AssetQueryParser>())
+            using (Telemetry.Activities.StartActivity("AssetQueryParser/ParseAsync"))
             {
                 var query = ParseClrQuery(q);
 
                 await TransformTagAsync(context, query);
 
                 WithSorting(query);
-                WithPaging(query);
+                WithPaging(query, q);
 
                 q = q.WithQuery(query);
 
@@ -83,11 +83,18 @@ namespace Squidex.Domain.Apps.Entities.Assets.Queries
             return query;
         }
 
-        private void WithPaging(ClrQuery query)
+        private void WithPaging(ClrQuery query, Q q)
         {
-            if (query.Take == long.MaxValue)
+            if (query.Take <= 0 || query.Take == long.MaxValue)
             {
-                query.Take = options.DefaultPageSize;
+                if (q.Ids != null && q.Ids.Count > 0)
+                {
+                    query.Take = q.Ids.Count;
+                }
+                else
+                {
+                    query.Take = options.DefaultPageSize;
+                }
             }
             else if (query.Take > options.MaxResults)
             {

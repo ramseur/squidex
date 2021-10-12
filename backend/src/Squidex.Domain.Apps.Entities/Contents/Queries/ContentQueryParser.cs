@@ -36,7 +36,7 @@ namespace Squidex.Domain.Apps.Entities.Contents.Queries
     {
         private static readonly TimeSpan CacheTime = TimeSpan.FromMinutes(60);
         private readonly EdmModel genericEdmModel = BuildEdmModel("Generic", "Content", new EdmModel(), null);
-        private readonly JsonSchema genericJsonSchema = ContentJsonSchemaBuilder.BuildSchema("Content", null, false, true);
+        private readonly JsonSchema genericJsonSchema = ContentJsonSchemaBuilder.BuildSchema(null, false, true);
         private readonly IMemoryCache cache;
         private readonly IJsonSerializer jsonSerializer;
         private readonly IAppProvider appprovider;
@@ -58,14 +58,14 @@ namespace Squidex.Domain.Apps.Entities.Contents.Queries
             Guard.NotNull(context, nameof(context));
             Guard.NotNull(q, nameof(q));
 
-            using (Telemetry.Activities.StartMethod<ContentQueryParser>())
+            using (Telemetry.Activities.StartActivity("ContentQueryParser/ParseAsync"))
             {
                 var query = await ParseClrQueryAsync(context, q, schema);
 
                 await TransformFilterAsync(query, context, schema);
 
                 WithSorting(query);
-                WithPaging(query);
+                WithPaging(query, q);
 
                 q = q.WithQuery(query);
 
@@ -155,11 +155,18 @@ namespace Squidex.Domain.Apps.Entities.Contents.Queries
             }
         }
 
-        private void WithPaging(ClrQuery query)
+        private void WithPaging(ClrQuery query, Q q)
         {
-            if (query.Take == long.MaxValue)
+            if (query.Take <= 0 || query.Take == long.MaxValue)
             {
-                query.Take = options.DefaultPageSize;
+                if (q.Ids != null && q.Ids.Count > 0)
+                {
+                    query.Take = q.Ids.Count;
+                }
+                else
+                {
+                    query.Take = options.DefaultPageSize;
+                }
             }
             else if (query.Take > options.MaxResults)
             {
@@ -232,6 +239,14 @@ namespace Squidex.Domain.Apps.Entities.Contents.Queries
             return result;
         }
 
+        private static JsonSchema BuildJsonSchema(Schema schema, IAppEntity app,
+            ResolvedComponents components, bool withHiddenFields)
+        {
+            var dataSchema = schema.BuildJsonSchema(app.PartitionResolver(), components, withHiddenFields);
+
+            return ContentJsonSchemaBuilder.BuildSchema(dataSchema, false, true);
+        }
+
         private IEdmModel BuildEdmModel(Context context, ISchemaEntity? schema,
             ResolvedComponents components)
         {
@@ -250,14 +265,6 @@ namespace Squidex.Domain.Apps.Entities.Contents.Queries
             });
 
             return result;
-        }
-
-        private static JsonSchema BuildJsonSchema(Schema schema, IAppEntity app,
-            ResolvedComponents components, bool withHiddenFields)
-        {
-            var dataSchema = schema.BuildJsonSchema(app.PartitionResolver(), components, withHiddenFields);
-
-            return ContentJsonSchemaBuilder.BuildSchema(schema.DisplayName(), dataSchema, false, true);
         }
 
         private static EdmModel BuildEdmModel(Schema schema, IAppEntity app,

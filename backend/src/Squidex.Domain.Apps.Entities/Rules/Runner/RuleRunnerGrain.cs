@@ -1,4 +1,4 @@
-// ==========================================================================
+﻿// ==========================================================================
 //  Squidex Headless CMS
 // ==========================================================================
 //  Copyright (c) Squidex UG (haftungsbeschraenkt)
@@ -137,23 +137,27 @@ namespace Squidex.Domain.Apps.Entities.Rules.Runner
                 {
                     currentJobToken = new CancellationTokenSource();
 
+#pragma warning disable MA0042 // Do not use blocking calls in an async method
                     Process(state.Value, currentJobToken.Token);
+#pragma warning restore MA0042 // Do not use blocking calls in an async method
                 }
             }
         }
 
-        private void Process(State job, CancellationToken ct)
+        private void Process(State job,
+            CancellationToken ct)
         {
             TaskExtensions.Forget(ProcessAsync(job, ct));
         }
 
-        private async Task ProcessAsync(State currentState, CancellationToken ct)
+        private async Task ProcessAsync(State currentState,
+            CancellationToken ct)
         {
             try
             {
                 currentReminder = await RegisterOrUpdateReminder("KeepAlive", TimeSpan.Zero, TimeSpan.FromMinutes(2));
 
-                var rule = await appProvider.GetRuleAsync(DomainId.Create(Key), currentState.RuleId!.Value);
+                var rule = await appProvider.GetRuleAsync(DomainId.Create(Key), currentState.RuleId!.Value, ct);
 
                 if (rule == null)
                 {
@@ -167,7 +171,7 @@ namespace Squidex.Domain.Apps.Entities.Rules.Runner
                         AppId = rule.AppId,
                         Rule = rule.RuleDef,
                         RuleId = rule.Id,
-                        IgnoreStale = true
+                        IncludeStale = true
                     };
 
                     if (currentState.RunFromSnapshots && ruleService.CanCreateSnapshotEvents(context))
@@ -213,33 +217,35 @@ namespace Squidex.Domain.Apps.Entities.Rules.Runner
             }
         }
 
-        private async Task EnqueueFromSnapshotsAsync(RuleContext context, CancellationToken ct)
+        private async Task EnqueueFromSnapshotsAsync(RuleContext context,
+            CancellationToken ct)
         {
             var errors = 0;
 
-            await foreach (var (job, ex, _) in ruleService.CreateSnapshotJobsAsync(context, ct))
+            await foreach (var job in ruleService.CreateSnapshotJobsAsync(context, ct))
             {
-                if (job != null)
+                if (job.Job != null && job.SkipReason == SkipReason.None)
                 {
-                    await ruleEventRepository.EnqueueAsync(job, ex);
+                    await ruleEventRepository.EnqueueAsync(job.Job, job.EnrichmentError, ct);
                 }
-                else if (ex != null)
+                else if (job.EnrichmentError != null)
                 {
                     errors++;
 
                     if (errors >= MaxErrors)
                     {
-                        throw ex;
+                        throw job.EnrichmentError;
                     }
 
-                    log.LogWarning(ex, w => w
+                    log.LogWarning(job.EnrichmentError, w => w
                         .WriteProperty("action", "runRule")
                         .WriteProperty("status", "failedPartially"));
                 }
             }
         }
 
-        private async Task EnqueueFromEventsAsync(State currentState, RuleContext context, CancellationToken ct)
+        private async Task EnqueueFromEventsAsync(State currentState, RuleContext context,
+            CancellationToken ct)
         {
             var errors = 0;
 
@@ -255,11 +261,11 @@ namespace Squidex.Domain.Apps.Entities.Rules.Runner
                     {
                         var jobs = ruleService.CreateJobsAsync(@event, context, ct);
 
-                        await foreach (var (job, ex, _) in jobs)
+                        await foreach (var job in jobs.WithCancellation(ct))
                         {
-                            if (job != null)
+                            if (job.Job != null && job.SkipReason == SkipReason.None)
                             {
-                                await ruleEventRepository.EnqueueAsync(job, ex);
+                                await ruleEventRepository.EnqueueAsync(job.Job, job.EnrichmentError, ct);
                             }
                         }
                     }

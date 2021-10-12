@@ -51,6 +51,10 @@ namespace Squidex.Web
         [Lazy]
         public bool CanUpdateSettings => IsAllowed(Permissions.AppUpdateSettings);
 
+        // Asset Scripts
+        [Lazy]
+        public bool CanUpdateAssetsScripts => IsAllowed(Permissions.AppAssetsScriptsUpdate);
+
         // Contributors
         [Lazy]
         public bool CanAssignContributor => IsAllowed(Permissions.AppContributorsAssign);
@@ -159,7 +163,7 @@ namespace Squidex.Web
 
         // Backups
         [Lazy]
-        public bool CanRestoreBackup => IsAllowed(Permissions.AdminEventsRead);
+        public bool CanRestoreBackup => IsAllowed(Permissions.AdminRestore);
 
         [Lazy]
         public bool CanCreateBackup => IsAllowed(Permissions.AppBackupsCreate);

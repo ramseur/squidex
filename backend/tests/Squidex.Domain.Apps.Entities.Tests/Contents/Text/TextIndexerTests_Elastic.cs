@@ -28,7 +28,7 @@ namespace Squidex.Domain.Apps.Entities.Contents.Text
             {
                 var index = new ElasticSearchTextIndex("http://localhost:9200", "squidex", true);
 
-                await index.InitializeAsync();
+                await index.InitializeAsync(default);
 
                 return index;
             }
@@ -38,7 +38,9 @@ namespace Squidex.Domain.Apps.Entities.Contents.Text
 
         public TextIndexerTests_Elastic()
         {
+#pragma warning disable MA0056 // Do not call overridable members in constructor
             SupportsQuerySyntax = true;
+#pragma warning restore MA0056 // Do not call overridable members in constructor
         }
 
         [Fact]

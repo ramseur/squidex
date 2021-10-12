@@ -80,6 +80,20 @@ namespace Squidex.Domain.Apps.Entities.Backup
             await state.WriteAsync();
         }
 
+        public async Task ClearAsync()
+        {
+            foreach (var backup in state.Value.Jobs)
+            {
+#pragma warning disable MA0040 // Flow the cancellation token
+                await backupArchiveStore.DeleteAsync(backup.Id);
+#pragma warning restore MA0040 // Flow the cancellation token
+            }
+
+            TryDeactivateOnIdle();
+
+            await state.ClearAsync();
+        }
+
         public async Task BackupAsync(RefToken actor)
         {
             if (currentJobToken != null)
@@ -106,7 +120,9 @@ namespace Squidex.Domain.Apps.Entities.Backup
 
             await state.WriteAsync();
 
+#pragma warning disable MA0042 // Do not use blocking calls in an async method
             Process(job, actor, currentJobToken.Token);
+#pragma warning restore MA0042 // Do not use blocking calls in an async method
         }
 
         private void Process(BackupJob job, RefToken actor,
@@ -126,7 +142,7 @@ namespace Squidex.Domain.Apps.Entities.Backup
             {
                 var appId = DomainId.Create(Key);
 
-                using (var stream = backupArchiveLocation.OpenStream(job.Id))
+                await using (var stream = backupArchiveLocation.OpenStream(job.Id))
                 {
                     using (var writer = await backupArchiveLocation.OpenWriterAsync(stream))
                     {
@@ -147,10 +163,10 @@ namespace Squidex.Domain.Apps.Entities.Backup
 
                             foreach (var handler in handlers)
                             {
-                                await handler.BackupEventAsync(@event, context);
+                                await handler.BackupEventAsync(@event, context, ct);
                             }
 
-                            writer.WriteEvent(storedEvent);
+                            writer.WriteEvent(storedEvent, ct);
 
                             job.HandledEvents = writer.WrittenEvents;
                             job.HandledAssets = writer.WrittenAttachments;
@@ -162,7 +178,7 @@ namespace Squidex.Domain.Apps.Entities.Backup
                         {
                             ct.ThrowIfCancellationRequested();
 
-                            await handler.BackupAsync(context);
+                            await handler.BackupAsync(context, ct);
                         }
 
                         foreach (var handler in handlers)
@@ -172,7 +188,7 @@ namespace Squidex.Domain.Apps.Entities.Backup
                             await handler.CompleteBackupAsync(context);
                         }
 
-                        await userMapping.StoreAsync(writer, userResolver);
+                        await userMapping.StoreAsync(writer, userResolver, ct);
                     }
 
                     stream.Position = 0;
@@ -230,7 +246,7 @@ namespace Squidex.Domain.Apps.Entities.Backup
 
         public async Task DeleteAsync(DomainId id)
         {
-            var job = state.Value.Jobs.FirstOrDefault(x => x.Id == id);
+            var job = state.Value.Jobs.Find(x => x.Id == id);
 
             if (job == null)
             {
@@ -258,7 +274,9 @@ namespace Squidex.Domain.Apps.Entities.Backup
         {
             try
             {
+#pragma warning disable MA0040 // Flow the cancellation token
                 await backupArchiveStore.DeleteAsync(job.Id);
+#pragma warning restore MA0040 // Flow the cancellation token
             }
             catch (Exception ex)
             {
