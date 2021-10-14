@@ -32,4 +32,4 @@ launchSettings.json
 /frontend/app-config/localhost.pem
 .idea
 /backend/src/Squidex.Domain.Users.Cassandra
-/backend/src/Squidex.Infrastructure.Cassandra
+
