@@ -10,6 +10,7 @@ using GraphQL;
 using GraphQL.Resolvers;
 using GraphQL.Types;
 using NodaTime;
+using Squidex.Domain.Apps.Core;
 using Squidex.Domain.Apps.Core.Contents;
 using Squidex.Domain.Apps.Entities.Contents.Commands;
 using Squidex.Infrastructure;
@@ -28,7 +29,7 @@ namespace Squidex.Domain.Apps.Entities.Contents.GraphQL.Types.Contents
                 new QueryArgument(AllTypes.String)
                 {
                     Name = "path",
-                    Description = "The path to the json value",
+                    Description = FieldDescriptions.JsonPath,
                     DefaultValue = null
                 }
             };
@@ -51,7 +52,7 @@ namespace Squidex.Domain.Apps.Entities.Contents.GraphQL.Types.Contents
             new QueryArgument(AllTypes.String)
             {
                 Name = "path",
-                Description = "The path to the json value",
+                Description = FieldDescriptions.JsonPath,
                 DefaultValue = null
             }
         };
@@ -63,13 +64,13 @@ namespace Squidex.Domain.Apps.Entities.Contents.GraphQL.Types.Contents
                 new QueryArgument(AllTypes.NonNullString)
                 {
                     Name = "id",
-                    Description = "The id of the content (usually GUID).",
+                    Description = FieldDescriptions.EntityId,
                     DefaultValue = null
                 },
                 new QueryArgument(AllTypes.Int)
                 {
                     Name = "version",
-                    Description = "The optional version of the content to retrieve an older instance (not cached).",
+                    Description = FieldDescriptions.QueryVersion,
                     DefaultValue = null
                 }
             };
@@ -82,11 +83,13 @@ namespace Squidex.Domain.Apps.Entities.Contents.GraphQL.Types.Contents
 
                 if (version >= 0)
                 {
-                    return await context.FindContentAsync(fieldContext.FieldDefinition.SchemaId(), contentId, version.Value);
+                    return await context.FindContentAsync(fieldContext.FieldDefinition.SchemaId(), contentId, version.Value,
+                        fieldContext.CancellationToken);
                 }
                 else
                 {
-                    return await context.FindContentAsync(contentId);
+                    return await context.FindContentAsync(contentId,
+                        fieldContext.CancellationToken);
                 }
             });
         }
@@ -98,31 +101,31 @@ namespace Squidex.Domain.Apps.Entities.Contents.GraphQL.Types.Contents
                 new QueryArgument(AllTypes.Int)
                 {
                     Name = "top",
-                    Description = "Optional number of contents to take.",
+                    Description = FieldDescriptions.QueryTop,
                     DefaultValue = null
                 },
                 new QueryArgument(AllTypes.Int)
                 {
                     Name = "skip",
-                    Description = "Optional number of contents to skip.",
+                    Description = FieldDescriptions.QuerySkip,
                     DefaultValue = 0
                 },
                 new QueryArgument(AllTypes.String)
                 {
                     Name = "filter",
-                    Description = "Optional OData filter.",
+                    Description = FieldDescriptions.QueryFilter,
                     DefaultValue = null
                 },
                 new QueryArgument(AllTypes.String)
                 {
                     Name = "orderby",
-                    Description = "Optional OData order definition.",
+                    Description = FieldDescriptions.QueryOrderBy,
                     DefaultValue = null
                 },
                 new QueryArgument(AllTypes.String)
                 {
                     Name = "search",
-                    Description = "Optional OData full text search.",
+                    Description = FieldDescriptions.QuerySearch,
                     DefaultValue = null
                 }
             };
@@ -133,7 +136,8 @@ namespace Squidex.Domain.Apps.Entities.Contents.GraphQL.Types.Contents
 
                 var q = Q.Empty.WithODataQuery(query).WithoutTotal();
 
-                return await context.QueryContentsAsync(fieldContext.FieldDefinition.SchemaId(), q);
+                return await context.QueryContentsAsync(fieldContext.FieldDefinition.SchemaId(), q,
+                    fieldContext.CancellationToken);
             });
 
             public static readonly IFieldResolver QueryWithTotal = Resolvers.Async<object, object>(async (_, fieldContext, context) =>
@@ -142,7 +146,8 @@ namespace Squidex.Domain.Apps.Entities.Contents.GraphQL.Types.Contents
 
                 var q = Q.Empty.WithODataQuery(query);
 
-                return await context.QueryContentsAsync(fieldContext.FieldDefinition.SchemaId(), q);
+                return await context.QueryContentsAsync(fieldContext.FieldDefinition.SchemaId(), q,
+                    fieldContext.CancellationToken);
             });
 
             public static readonly IFieldResolver Referencing = Resolvers.Async<IContentEntity, object?>(async (source, fieldContext, context) =>
@@ -151,7 +156,8 @@ namespace Squidex.Domain.Apps.Entities.Contents.GraphQL.Types.Contents
 
                 var q = Q.Empty.WithODataQuery(query).WithReference(source.Id).WithoutTotal();
 
-                return await context.QueryContentsAsync(fieldContext.FieldDefinition.SchemaId(), q);
+                return await context.QueryContentsAsync(fieldContext.FieldDefinition.SchemaId(), q,
+                    fieldContext.CancellationToken);
             });
 
             public static readonly IFieldResolver ReferencingWithTotal = Resolvers.Async<IContentEntity, object?>(async (source, fieldContext, context) =>
@@ -160,7 +166,8 @@ namespace Squidex.Domain.Apps.Entities.Contents.GraphQL.Types.Contents
 
                 var q = Q.Empty.WithODataQuery(query).WithReference(source.Id);
 
-                return await context.QueryContentsAsync(fieldContext.FieldDefinition.SchemaId(), q);
+                return await context.QueryContentsAsync(fieldContext.FieldDefinition.SchemaId(), q,
+                    fieldContext.CancellationToken);
             });
         }
 
@@ -173,25 +180,25 @@ namespace Squidex.Domain.Apps.Entities.Contents.GraphQL.Types.Contents
                     new QueryArgument(new NonNullGraphType(inputType))
                     {
                         Name = "data",
-                        Description = "The data for the content.",
+                        Description = FieldDescriptions.ContentRequestData,
                         DefaultValue = null
                     },
                     new QueryArgument(AllTypes.Boolean)
                     {
                         Name = "publish",
-                        Description = "Set to true to autopublish content on create.",
+                        Description = FieldDescriptions.ContentRequestPublish,
                         DefaultValue = false
                     },
                     new QueryArgument(AllTypes.String)
                     {
                         Name = "status",
-                        Description = "The initial status.",
+                        Description = FieldDescriptions.ContentRequestOptionalStatus,
                         DefaultValue = null
                     },
                     new QueryArgument(AllTypes.String)
                     {
                         Name = "id",
-                        Description = "The optional custom content id.",
+                        Description = FieldDescriptions.ContentRequestOptionalId,
                         DefaultValue = null
                     }
                 };
@@ -232,31 +239,31 @@ namespace Squidex.Domain.Apps.Entities.Contents.GraphQL.Types.Contents
                     new QueryArgument(AllTypes.NonNullString)
                     {
                         Name = "id",
-                        Description = "The id of the content (usually GUID).",
+                        Description = FieldDescriptions.EntityId,
                         DefaultValue = null
                     },
                     new QueryArgument(new NonNullGraphType(inputType))
                     {
                         Name = "data",
-                        Description = "The data for the content.",
+                        Description = FieldDescriptions.ContentRequestData,
                         DefaultValue = null
                     },
                     new QueryArgument(AllTypes.Boolean)
                     {
                         Name = "publish",
-                        Description = "Set to true to autopublish content on create.",
+                        Description = FieldDescriptions.ContentRequestPublish,
                         DefaultValue = false
                     },
                     new QueryArgument(AllTypes.String)
                     {
                         Name = "status",
-                        Description = "The initial status.",
+                        Description = FieldDescriptions.ContentRequestOptionalStatus,
                         DefaultValue = null
                     },
                     new QueryArgument(AllTypes.Int)
                     {
                         Name = "expectedVersion",
-                        Description = "The expected version",
+                        Description = FieldDescriptions.EntityExpectedVersion,
                         DefaultValue = EtagVersion.Any
                     }
                 };
@@ -294,19 +301,19 @@ namespace Squidex.Domain.Apps.Entities.Contents.GraphQL.Types.Contents
                     new QueryArgument(AllTypes.String)
                     {
                         Name = "id",
-                        Description = "The optional custom content id.",
+                        Description = FieldDescriptions.EntityId,
                         DefaultValue = null
                     },
                     new QueryArgument(new NonNullGraphType(inputType))
                     {
                         Name = "data",
-                        Description = "The data for the content.",
+                        Description = FieldDescriptions.ContentRequestData,
                         DefaultValue = null
                     },
                     new QueryArgument(AllTypes.Int)
                     {
                         Name = "expectedVersion",
-                        Description = "The expected version",
+                        Description = FieldDescriptions.EntityExpectedVersion,
                         DefaultValue = EtagVersion.Any
                     }
                 };
@@ -330,19 +337,19 @@ namespace Squidex.Domain.Apps.Entities.Contents.GraphQL.Types.Contents
                     new QueryArgument(AllTypes.String)
                     {
                         Name = "id",
-                        Description = "The optional custom content id.",
+                        Description = FieldDescriptions.EntityId,
                         DefaultValue = null
                     },
                     new QueryArgument(new NonNullGraphType(inputType))
                     {
                         Name = "data",
-                        Description = "The data for the content.",
+                        Description = FieldDescriptions.ContentRequestData,
                         DefaultValue = null
                     },
                     new QueryArgument(AllTypes.Int)
                     {
                         Name = "expectedVersion",
-                        Description = "The expected version",
+                        Description = FieldDescriptions.EntityExpectedVersion,
                         DefaultValue = EtagVersion.Any
                     }
                 };
@@ -364,25 +371,25 @@ namespace Squidex.Domain.Apps.Entities.Contents.GraphQL.Types.Contents
                 new QueryArgument(AllTypes.NonNullString)
                 {
                     Name = "id",
-                    Description = "The id of the content (usually GUID).",
+                    Description = FieldDescriptions.EntityId,
                     DefaultValue = null
                 },
                 new QueryArgument(AllTypes.NonNullString)
                 {
                     Name = "status",
-                    Description = "The new status",
+                    Description = FieldDescriptions.ContentRequestStatus,
                     DefaultValue = null
                 },
                 new QueryArgument(AllTypes.DateTime)
                 {
                     Name = "dueTime",
-                    Description = "When to change the status",
+                    Description = FieldDescriptions.ContentRequestDueTime,
                     DefaultValue = null
                 },
                 new QueryArgument(AllTypes.Int)
                 {
                     Name = "expectedVersion",
-                    Description = "The expected version",
+                    Description = FieldDescriptions.EntityExpectedVersion,
                     DefaultValue = EtagVersion.Any
                 }
             };
@@ -410,7 +417,7 @@ namespace Squidex.Domain.Apps.Entities.Contents.GraphQL.Types.Contents
                 new QueryArgument(AllTypes.Int)
                 {
                     Name = "expectedVersion",
-                    Description = "The expected version",
+                    Description = FieldDescriptions.EntityExpectedVersion,
                     DefaultValue = EtagVersion.Any
                 }
             };

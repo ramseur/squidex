@@ -5,6 +5,7 @@
 //  All rights reserved. Licensed under the MIT license.
 // ==========================================================================
 
+using System;
 using Squidex.Infrastructure;
 using Squidex.Infrastructure.Security;
 
@@ -125,6 +126,10 @@ namespace Squidex.Shared
         public const string AppAssetsUpdate = "squidex.apps.{app}.assets.update";
         public const string AppAssetsDelete = "squidex.apps.{app}.assets.delete";
 
+        public const string AppAssetScripts = "squidex.apps.{app}.asset-scripts";
+        public const string AppAssetSScriptsRead = "squidex.apps.{app}.asset-scripts.read";
+        public const string AppAssetsScriptsUpdate = "squidex.apps.{app}.asset-scripts.update";
+
         // Rules
         public const string AppRules = "squidex.apps.{app}.rules";
         public const string AppRulesRead = "squidex.apps.{app}.rules.read";
@@ -166,7 +171,9 @@ namespace Squidex.Shared
         {
             Guard.NotNull(id, nameof(id));
 
-            return new Permission(id.Replace("{app}", app ?? Permission.Any).Replace("{schema}", schema ?? Permission.Any));
+            return new Permission(id
+                .Replace("{app}", app ?? Permission.Any, StringComparison.Ordinal)
+                .Replace("{schema}", schema ?? Permission.Any, StringComparison.Ordinal));
         }
     }
 }

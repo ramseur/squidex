@@ -43,7 +43,7 @@ namespace Squidex.Domain.Apps.Entities.Contents
                 new ReferencesJintExtension(services)
             };
 
-            A.CallTo(() => appProvider.GetAppAsync(appId.Id, false))
+            A.CallTo(() => appProvider.GetAppAsync(appId.Id, false, default))
                 .Returns(Mocks.App(appId));
 
             sut = new JintScriptEngine(new MemoryCache(Options.Create(new MemoryCacheOptions())), extensions)
@@ -71,7 +71,13 @@ namespace Squidex.Domain.Apps.Entities.Contents
                     A<Context>.That.Matches(x => x.App.Id == appId.Id && x.User == user), A<Q>.That.HasIds(referenceId1), A<CancellationToken>._))
                 .Returns(ResultList.CreateFrom(1, reference1));
 
-            var vars = new ScriptVars { Data = data, AppId = appId.Id, User = user };
+            var vars = new ScriptVars
+            {
+                ["appId"] = appId.Id,
+                ["data"] = data,
+                ["dataOld"] = null,
+                ["user"] = user
+            };
 
             var script = @"
                 getReference(data.references.iv[0], function (references) {
@@ -109,7 +115,13 @@ namespace Squidex.Domain.Apps.Entities.Contents
                     A<Context>.That.Matches(x => x.App.Id == appId.Id && x.User == user), A<Q>.That.HasIds(referenceId1, referenceId2), A<CancellationToken>._))
                 .Returns(ResultList.CreateFrom(2, reference1, reference2));
 
-            var vars = new ScriptVars { Data = data, AppId = appId.Id, User = user };
+            var vars = new ScriptVars
+            {
+                ["appId"] = appId.Id,
+                ["data"] = data,
+                ["dataOld"] = null,
+                ["user"] = user
+            };
 
             var script = @"
                 getReferences(data.references.iv, function (references) {
@@ -148,9 +160,9 @@ namespace Squidex.Domain.Apps.Entities.Contents
         private static string Cleanup(string text)
         {
             return text
-                .Replace("\r", string.Empty)
-                .Replace("\n", string.Empty)
-                .Replace(" ", string.Empty);
+                .Replace("\r", string.Empty, StringComparison.Ordinal)
+                .Replace("\n", string.Empty, StringComparison.Ordinal)
+                .Replace(" ", string.Empty, StringComparison.Ordinal);
         }
     }
 }

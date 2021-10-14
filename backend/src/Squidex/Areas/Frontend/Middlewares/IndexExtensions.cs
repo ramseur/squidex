@@ -26,7 +26,9 @@ namespace Squidex.Areas.Frontend.Middlewares
 
         public static bool IsIndex(this HttpContext context)
         {
-            return context.Request.Path.Value?.EndsWith("/index.html", StringComparison.OrdinalIgnoreCase) == true;
+            var path = context.Request.Path.Value;
+
+            return path == "/" || path?.EndsWith("/index.html", StringComparison.OrdinalIgnoreCase) == true;
         }
 
         public static bool IsHtmlPath(this HttpContext context)
@@ -43,7 +45,7 @@ namespace Squidex.Areas.Frontend.Middlewares
         {
             if (httpContext.Request.PathBase != null)
             {
-                html = html.Replace("<base href=\"/\">", $"<base href=\"{httpContext.Request.PathBase}/\">");
+                html = html.Replace("<base href=\"/\">", $"<base href=\"{httpContext.Request.PathBase}/\">", StringComparison.OrdinalIgnoreCase);
             }
 
             return html;
@@ -76,7 +78,7 @@ namespace Squidex.Areas.Frontend.Middlewares
 
                 var texts = GetText(CultureInfo.CurrentUICulture.Name);
 
-                html = html.Replace("<body>", $"<body>\n<script>\nvar options = {jsonOptions};\nvar texts = {texts};</script>");
+                html = html.Replace("<body>", $"<body>\n<script>\nvar options = {jsonOptions};\nvar texts = {texts};</script>", StringComparison.OrdinalIgnoreCase);
             }
 
             return html;

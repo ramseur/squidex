@@ -21,9 +21,9 @@ namespace Squidex.Domain.Apps.Entities.Assets.Queries
             this.grainFactory = grainFactory;
         }
 
-        public async Task<IAssetEntity?> GetAsync(DomainId appId, DomainId id, long version)
+        public async Task<IAssetEntity?> GetAsync(DomainId appId, DomainId id, long version = EtagVersion.Any)
         {
-            using (Telemetry.Activities.StartMethod<AssetLoader>())
+            using (Telemetry.Activities.StartActivity("AssetLoader/GetAsync"))
             {
                 var key = DomainId.Combine(appId, id);
 

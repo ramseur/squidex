@@ -129,7 +129,7 @@ namespace Squidex.Domain.Apps.Entities.Contents.Queries
         [Fact]
         public async Task Should_convert_full_text_query_to_filter_with_other_filter()
         {
-            A.CallTo(() => textIndex.SearchAsync(requestContext.App, A<TextQuery>.That.Matches(x => x.Text == "Hello"), requestContext.Scope()))
+            A.CallTo(() => textIndex.SearchAsync(requestContext.App, A<TextQuery>.That.Matches(x => x.Text == "Hello"), requestContext.Scope(), default))
                 .Returns(new List<DomainId> { DomainId.Create("1"), DomainId.Create("2") });
 
             var query = Q.Empty.WithODataQuery("$search=Hello&$filter=data/firstName/iv eq 'ABC'");
@@ -142,7 +142,7 @@ namespace Squidex.Domain.Apps.Entities.Contents.Queries
         [Fact]
         public async Task Should_convert_full_text_query_to_filter()
         {
-            A.CallTo(() => textIndex.SearchAsync(requestContext.App, A<TextQuery>.That.Matches(x => x.Text == "Hello"), requestContext.Scope()))
+            A.CallTo(() => textIndex.SearchAsync(requestContext.App, A<TextQuery>.That.Matches(x => x.Text == "Hello"), requestContext.Scope(), default))
                 .Returns(new List<DomainId> { DomainId.Create("1"), DomainId.Create("2") });
 
             var query = Q.Empty.WithODataQuery("$search=Hello");
@@ -155,7 +155,7 @@ namespace Squidex.Domain.Apps.Entities.Contents.Queries
         [Fact]
         public async Task Should_convert_full_text_query_to_filter_if_single_id_found()
         {
-            A.CallTo(() => textIndex.SearchAsync(requestContext.App, A<TextQuery>.That.Matches(x => x.Text == "Hello"), requestContext.Scope()))
+            A.CallTo(() => textIndex.SearchAsync(requestContext.App, A<TextQuery>.That.Matches(x => x.Text == "Hello"), requestContext.Scope(), default))
                 .Returns(new List<DomainId> { DomainId.Create("1") });
 
             var query = Q.Empty.WithODataQuery("$search=Hello");
@@ -168,7 +168,7 @@ namespace Squidex.Domain.Apps.Entities.Contents.Queries
         [Fact]
         public async Task Should_convert_full_text_query_to_filter_if_index_returns_null()
         {
-            A.CallTo(() => textIndex.SearchAsync(requestContext.App, A<TextQuery>.That.Matches(x => x.Text == "Hello"), requestContext.Scope()))
+            A.CallTo(() => textIndex.SearchAsync(requestContext.App, A<TextQuery>.That.Matches(x => x.Text == "Hello"), requestContext.Scope(), default))
                 .Returns(Task.FromResult<List<DomainId>?>(null));
 
             var query = Q.Empty.WithODataQuery("$search=Hello");
@@ -181,7 +181,7 @@ namespace Squidex.Domain.Apps.Entities.Contents.Queries
         [Fact]
         public async Task Should_convert_full_text_query_to_filter_if_index_returns_empty()
         {
-            A.CallTo(() => textIndex.SearchAsync(requestContext.App, A<TextQuery>.That.Matches(x => x.Text == "Hello"), requestContext.Scope()))
+            A.CallTo(() => textIndex.SearchAsync(requestContext.App, A<TextQuery>.That.Matches(x => x.Text == "Hello"), requestContext.Scope(), default))
                 .Returns(new List<DomainId>());
 
             var query = Q.Empty.WithODataQuery("$search=Hello");
@@ -194,7 +194,7 @@ namespace Squidex.Domain.Apps.Entities.Contents.Queries
         [Fact]
         public async Task Should_convert_geo_query_to_filter()
         {
-            A.CallTo(() => textIndex.SearchAsync(requestContext.App, new GeoQuery(schemaId.Id, "geo.iv", 10, 20, 30), requestContext.Scope()))
+            A.CallTo(() => textIndex.SearchAsync(requestContext.App, new GeoQuery(schemaId.Id, "geo.iv", 10, 20, 30), requestContext.Scope(), default))
                 .Returns(new List<DomainId> { DomainId.Create("1"), DomainId.Create("2") });
 
             var query = Q.Empty.WithODataQuery("$filter=geo.distance(data/geo/iv, geography'POINT(20 10)') lt 30.0");
@@ -207,7 +207,7 @@ namespace Squidex.Domain.Apps.Entities.Contents.Queries
         [Fact]
         public async Task Should_convert_geo_query_to_filter_if_single_id_found()
         {
-            A.CallTo(() => textIndex.SearchAsync(requestContext.App, new GeoQuery(schemaId.Id, "geo.iv", 10, 20, 30), requestContext.Scope()))
+            A.CallTo(() => textIndex.SearchAsync(requestContext.App, new GeoQuery(schemaId.Id, "geo.iv", 10, 20, 30), requestContext.Scope(), default))
                 .Returns(new List<DomainId> { DomainId.Create("1") });
 
             var query = Q.Empty.WithODataQuery("$filter=geo.distance(data/geo/iv, geography'POINT(20 10)') lt 30.0");
@@ -220,7 +220,7 @@ namespace Squidex.Domain.Apps.Entities.Contents.Queries
         [Fact]
         public async Task Should_convert_geo_query_to_filter_if_index_returns_null()
         {
-            A.CallTo(() => textIndex.SearchAsync(requestContext.App, new GeoQuery(schemaId.Id, "geo.iv", 10, 20, 30), requestContext.Scope()))
+            A.CallTo(() => textIndex.SearchAsync(requestContext.App, new GeoQuery(schemaId.Id, "geo.iv", 10, 20, 30), requestContext.Scope(), default))
                 .Returns(Task.FromResult<List<DomainId>?>(null));
 
             var query = Q.Empty.WithODataQuery("$filter=geo.distance(data/geo/iv, geography'POINT(20 10)') lt 30.0");
@@ -233,7 +233,7 @@ namespace Squidex.Domain.Apps.Entities.Contents.Queries
         [Fact]
         public async Task Should_convert_geo_query_to_filter_if_index_returns_empty()
         {
-            A.CallTo(() => textIndex.SearchAsync(requestContext.App, new GeoQuery(schemaId.Id, "geo.iv", 10, 20, 30), requestContext.Scope()))
+            A.CallTo(() => textIndex.SearchAsync(requestContext.App, new GeoQuery(schemaId.Id, "geo.iv", 10, 20, 30), requestContext.Scope(), default))
                 .Returns(new List<DomainId>());
 
             var query = Q.Empty.WithODataQuery("$filter=geo.distance(data/geo/iv, geography'POINT(20 10)') lt 30.0");
@@ -243,10 +243,14 @@ namespace Squidex.Domain.Apps.Entities.Contents.Queries
             Assert.Equal("Filter: id == '__notfound__'; Take: 30; Sort: lastModified Descending, id Ascending", q.Query.ToString());
         }
 
-        [Fact]
-        public async Task Should_apply_default_page_size()
+        [Theory]
+        [InlineData(0L)]
+        [InlineData(-1L)]
+        [InlineData(long.MaxValue)]
+        [InlineData(long.MinValue)]
+        public async Task Should_apply_default_take_size_if_not_defined(long take)
         {
-            var query = Q.Empty;
+            var query = Q.Empty.WithQuery(new ClrQuery { Take = take });
 
             var q = await sut.ParseAsync(requestContext, query, schema);
 
@@ -254,7 +258,27 @@ namespace Squidex.Domain.Apps.Entities.Contents.Queries
         }
 
         [Fact]
-        public async Task Should_apply_default_limit()
+        public async Task Should_set_take_to_ids_count_if_take_not_defined()
+        {
+            var query = Q.Empty.WithIds("1, 2, 3");
+
+            var q = await sut.ParseAsync(requestContext, query, schema);
+
+            Assert.Equal("Take: 3; Sort: lastModified Descending, id Ascending", q.Query.ToString());
+        }
+
+        [Fact]
+        public async Task Should_not_set_take_to_ids_count_if_take_defined()
+        {
+            var query = Q.Empty.WithIds("1, 2, 3").WithQuery(new ClrQuery { Take = 20 });
+
+            var q = await sut.ParseAsync(requestContext, query, schema);
+
+            Assert.Equal("Take: 20; Sort: lastModified Descending, id Ascending", q.Query.ToString());
+        }
+
+        [Fact]
+        public async Task Should_apply_default_take_limit()
         {
             var query = Q.Empty.WithODataQuery("$top=300&$skip=20");
 

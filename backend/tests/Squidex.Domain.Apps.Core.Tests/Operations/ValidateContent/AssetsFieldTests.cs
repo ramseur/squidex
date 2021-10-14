@@ -26,7 +26,7 @@ namespace Squidex.Domain.Apps.Core.Operations.ValidateContent
         private readonly DomainId asset2 = DomainId.NewGuid();
         private readonly IValidatorsFactory factory;
 
-        private class CustomFactory : IValidatorsFactory
+        private sealed class CustomFactory : IValidatorsFactory
         {
             public IEnumerable<IValidator> CreateValueValidators(ValidatorContext context, IField field, ValidatorFactory createFieldValidator)
             {
@@ -52,7 +52,7 @@ namespace Squidex.Domain.Apps.Core.Operations.ValidateContent
         {
             var sut = Field(new AssetsFieldProperties());
 
-            Assert.Equal("my-assets", sut.Name);
+            Assert.Equal("myAssets", sut.Name);
         }
 
         [Fact]
@@ -164,7 +164,7 @@ namespace Squidex.Domain.Apps.Core.Operations.ValidateContent
 
         private static RootField<AssetsFieldProperties> Field(AssetsFieldProperties properties)
         {
-            return Fields.Assets(1, "my-assets", Partitioning.Invariant, properties);
+            return Fields.Assets(1, "myAssets", Partitioning.Invariant, properties);
         }
     }
 }

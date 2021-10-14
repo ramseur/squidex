@@ -5,7 +5,6 @@
 //  All rights reserved. Licensed under the MIT license.
 // ==========================================================================
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -103,10 +102,25 @@ namespace Squidex.Domain.Apps.Entities.MongoDb.Contents
             return queryAsStream.StreamAll(appId, schemaIds, ct);
         }
 
+        public IAsyncEnumerable<IContentEntity> QueryScheduledWithoutDataAsync(Instant now,
+            CancellationToken ct)
+        {
+            return queryScheduled.QueryAsync(now, ct);
+        }
+
+        public async Task DeleteAppAsync(DomainId appId,
+            CancellationToken ct)
+        {
+            using (Telemetry.Activities.StartActivity("MongoContentCollection/DeleteAppAsync"))
+            {
+                await Collection.DeleteManyAsync(Filter.Eq(x => x.IndexedAppId, appId), ct);
+            }
+        }
+
         public async Task<IResultList<IContentEntity>> QueryAsync(IAppEntity app, List<ISchemaEntity> schemas, Q q,
             CancellationToken ct)
         {
-            using (Telemetry.Activities.StartMethod<MongoContentRepository>())
+            using (Telemetry.Activities.StartActivity("MongoContentCollection/QueryAsync"))
             {
                 if (q.Ids != null && q.Ids.Count > 0)
                 {
@@ -135,7 +149,7 @@ namespace Squidex.Domain.Apps.Entities.MongoDb.Contents
         public async Task<IResultList<IContentEntity>> QueryAsync(IAppEntity app, ISchemaEntity schema, Q q,
             CancellationToken ct)
         {
-            using (Telemetry.Activities.StartMethod<MongoContentRepository>())
+            using (Telemetry.Activities.StartActivity("MongoContentCollection/QueryAsync"))
             {
                 if (q.Ids != null && q.Ids.Count > 0)
                 {
@@ -159,25 +173,16 @@ namespace Squidex.Domain.Apps.Entities.MongoDb.Contents
         public async Task<IContentEntity?> FindContentAsync(ISchemaEntity schema, DomainId id,
             CancellationToken ct)
         {
-            using (Telemetry.Activities.StartMethod<MongoContentRepository>())
+            using (Telemetry.Activities.StartActivity("MongoContentCollection/FindContentAsync"))
             {
                 return await queryBdId.QueryAsync(schema, id, ct);
-            }
-        }
-
-        public async Task QueryScheduledWithoutDataAsync(Instant now, Func<IContentEntity, Task> callback,
-            CancellationToken ct)
-        {
-            using (Telemetry.Activities.StartMethod<MongoContentRepository>())
-            {
-                await queryScheduled.QueryAsync(now, callback, ct);
             }
         }
 
         public async Task<IReadOnlyList<(DomainId SchemaId, DomainId Id, Status Status)>> QueryIdsAsync(DomainId appId, HashSet<DomainId> ids,
             CancellationToken ct)
         {
-            using (Telemetry.Activities.StartMethod<MongoContentRepository>())
+            using (Telemetry.Activities.StartActivity("MongoContentCollection/QueryIdsAsync"))
             {
                 return await queryByIds.QueryIdsAsync(appId, ids, ct);
             }
@@ -186,7 +191,7 @@ namespace Squidex.Domain.Apps.Entities.MongoDb.Contents
         public async Task<IReadOnlyList<(DomainId SchemaId, DomainId Id, Status Status)>> QueryIdsAsync(DomainId appId, DomainId schemaId, FilterNode<ClrValue> filterNode,
             CancellationToken ct)
         {
-            using (Telemetry.Activities.StartMethod<MongoContentRepository>())
+            using (Telemetry.Activities.StartActivity("MongoContentCollection/QueryIdsAsync"))
             {
                 return await queryByQuery.QueryIdsAsync(appId, schemaId, filterNode, ct);
             }
@@ -195,30 +200,34 @@ namespace Squidex.Domain.Apps.Entities.MongoDb.Contents
         public async Task<bool> HasReferrersAsync(DomainId appId, DomainId contentId,
             CancellationToken ct)
         {
-            using (Telemetry.Activities.StartMethod<MongoContentRepository>())
+            using (Telemetry.Activities.StartActivity("MongoContentCollection/HasReferrersAsync"))
             {
                 return await queryReferrers.CheckExistsAsync(appId, contentId, ct);
             }
         }
 
-        public async Task<long> FindVersionAsync(DomainId documentId)
+        public async Task<long> FindVersionAsync(DomainId documentId,
+            CancellationToken ct = default)
         {
-            var result = await Collection.Find(x => x.DocumentId == documentId).Only(x => x.Version).FirstOrDefaultAsync();
+            var result = await Collection.Find(x => x.DocumentId == documentId).Only(x => x.Version).FirstOrDefaultAsync(ct);
 
             return result?["vs"].AsInt64 ?? EtagVersion.Empty;
         }
 
-        public Task UpsertVersionedAsync(DomainId documentId, long oldVersion, MongoContentEntity entity)
+        public Task UpsertVersionedAsync(DomainId documentId, long oldVersion, MongoContentEntity entity,
+            CancellationToken ct = default)
         {
-            return Collection.UpsertVersionedAsync(documentId, oldVersion, entity.Version, entity);
+            return Collection.UpsertVersionedAsync(documentId, oldVersion, entity.Version, entity, ct);
         }
 
-        public Task RemoveAsync(DomainId documentId)
+        public Task RemoveAsync(DomainId documentId,
+            CancellationToken ct = default)
         {
-            return Collection.DeleteOneAsync(x => x.DocumentId == documentId);
+            return Collection.DeleteOneAsync(x => x.DocumentId == documentId, ct);
         }
 
-        public Task InsertManyAsync(IReadOnlyList<MongoContentEntity> entities)
+        public Task InsertManyAsync(IReadOnlyList<MongoContentEntity> entities,
+            CancellationToken ct = default)
         {
             if (entities.Count == 0)
             {
@@ -232,7 +241,7 @@ namespace Squidex.Domain.Apps.Entities.MongoDb.Contents
                 IsUpsert = true
             }).ToList();
 
-            return Collection.BulkWriteAsync(writes, BulkUnordered);
+            return Collection.BulkWriteAsync(writes, BulkUnordered, ct);
         }
     }
 }

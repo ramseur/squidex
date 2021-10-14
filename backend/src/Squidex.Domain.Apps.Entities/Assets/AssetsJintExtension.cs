@@ -41,12 +41,12 @@ namespace Squidex.Domain.Apps.Entities.Assets
 
         private void AddAsset(ExecutionContext context)
         {
-            if (!context.TryGetValue<DomainId>(nameof(ScriptVars.AppId), out var appId))
+            if (!context.TryGetValue<DomainId>("appId", out var appId))
             {
                 return;
             }
 
-            if (!context.TryGetValue<ClaimsPrincipal>(nameof(ScriptVars.User), out var user))
+            if (!context.TryGetValue<ClaimsPrincipal>("user", out var user))
             {
                 return;
             }
@@ -162,10 +162,9 @@ namespace Squidex.Domain.Apps.Entities.Assets
                         .WithoutTotal());
 
                 var assetQuery = serviceProvider.GetRequiredService<IAssetQueryService>();
+                var assetItems = await assetQuery.QueryAsync(requestContext, null, Q.Empty.WithIds(ids), context.CancellationToken);
 
-                var assets = await assetQuery.QueryAsync(requestContext, null, Q.Empty.WithIds(ids), context.CancellationToken);
-
-                callback(JsValue.FromObject(context.Engine, assets.ToArray()));
+                callback(JsValue.FromObject(context.Engine, assetItems.ToArray()));
             }
             catch (Exception ex)
             {

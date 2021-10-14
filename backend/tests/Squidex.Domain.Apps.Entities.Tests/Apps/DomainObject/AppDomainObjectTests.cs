@@ -48,7 +48,7 @@ namespace Squidex.Domain.Apps.Entities.Apps.DomainObject
         {
             user = UserMocks.User(contributorId);
 
-            A.CallTo(() => userResolver.FindByIdOrEmailAsync(contributorId))
+            A.CallTo(() => userResolver.FindByIdOrEmailAsync(contributorId, default))
                 .Returns(user);
 
             A.CallTo(() => appPlansProvider.GetFreePlan())
@@ -70,11 +70,13 @@ namespace Squidex.Domain.Apps.Entities.Apps.DomainObject
             };
 
             sut = new AppDomainObject(PersistenceFactory, A.Dummy<ISemanticLog>(), initialSettings, appPlansProvider, appPlansBillingManager, userResolver);
+#pragma warning disable MA0056 // Do not call overridable members in constructor
             sut.Setup(Id);
+#pragma warning restore MA0056 // Do not call overridable members in constructor
         }
 
         [Fact]
-        public async Task Command_should_throw_exception_if_app_is_archived()
+        public async Task Command_should_throw_exception_if_app_is_deleted()
         {
             await ExecuteCreateAsync();
             await ExecuteArchiveAsync();
@@ -624,9 +626,9 @@ namespace Squidex.Domain.Apps.Entities.Apps.DomainObject
         }
 
         [Fact]
-        public async Task ArchiveApp_should_create_events_and_update_archived_flag()
+        public async Task ArchiveApp_should_create_events_and_update_deleted_flag()
         {
-            var command = new ArchiveApp();
+            var command = new DeleteApp();
 
             await ExecuteCreateAsync();
 
@@ -634,11 +636,11 @@ namespace Squidex.Domain.Apps.Entities.Apps.DomainObject
 
             result.ShouldBeEquivalent(None.Value);
 
-            Assert.True(sut.Snapshot.IsArchived);
+            Assert.True(sut.Snapshot.IsDeleted);
 
             LastEvents
                 .ShouldHaveSameEvents(
-                    CreateEvent(new AppArchived())
+                    CreateEvent(new AppDeleted())
                 );
 
             A.CallTo(() => appPlansBillingManager.ChangePlanAsync(command.Actor.Identifier, AppNamedId, null, A<string?>._))
@@ -687,7 +689,7 @@ namespace Squidex.Domain.Apps.Entities.Apps.DomainObject
 
         private Task ExecuteArchiveAsync()
         {
-            return PublishAsync(new ArchiveApp());
+            return PublishAsync(new DeleteApp());
         }
 
         private Task<object> PublishIdempotentAsync(AppCommand command)

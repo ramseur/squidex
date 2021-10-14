@@ -7,6 +7,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Threading;
 using System.Threading.Tasks;
 using FakeItEasy;
 using LoremNET;
@@ -73,7 +75,7 @@ namespace Squidex.Domain.Apps.Entities.Contents.MongoDb
 
         private async Task SetupAsync(MongoContentRepository contentRepository, IMongoDatabase database)
         {
-            await contentRepository.InitializeAsync();
+            await contentRepository.InitializeAsync(default);
 
             await database.RunCommandAsync<BsonDocument>("{ profile : 0 }");
             await database.DropCollectionAsync("system.profile");
@@ -146,7 +148,7 @@ namespace Squidex.Domain.Apps.Entities.Contents.MongoDb
         {
             var appProvider = A.Fake<IAppProvider>();
 
-            A.CallTo(() => appProvider.GetSchemaAsync(A<DomainId>._, A<DomainId>._, false))
+            A.CallTo(() => appProvider.GetSchemaAsync(A<DomainId>._, A<DomainId>._, false, A<CancellationToken>._))
                 .ReturnsLazily(x => Task.FromResult<ISchemaEntity?>(CreateSchema(x.GetArgument<DomainId>(0)!, x.GetArgument<DomainId>(1)!)));
 
             return appProvider;
@@ -181,7 +183,7 @@ namespace Squidex.Domain.Apps.Entities.Contents.MongoDb
 
         public string RandomValue()
         {
-            return random.Next(0, numValues).ToString();
+            return random.Next(0, numValues).ToString(CultureInfo.InvariantCulture);
         }
 
         private static IAppEntity CreateApp(DomainId appId)

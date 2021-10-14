@@ -7,11 +7,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using Squidex.Domain.Apps.Entities;
 using Squidex.Infrastructure;
-using Squidex.Log;
 
 namespace Squidex.Web
 {
@@ -50,7 +50,7 @@ namespace Squidex.Web
                 }
 
                 var cacheBuffer = hasher.GetHashAndReset();
-                var cacheString = BitConverter.ToString(cacheBuffer).Replace("-", string.Empty).ToUpperInvariant();
+                var cacheString = BitConverter.ToString(cacheBuffer).Replace("-", string.Empty, StringComparison.Ordinal).ToUpperInvariant();
 
                 return cacheString;
             }
@@ -58,7 +58,7 @@ namespace Squidex.Web
 
         public static string ToEtag<T>(this T entity) where T : IEntity, IEntityWithVersion
         {
-            return entity.Version.ToString();
+            return entity.Version.ToString(CultureInfo.InvariantCulture);
         }
     }
 }

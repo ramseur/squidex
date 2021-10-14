@@ -97,7 +97,7 @@ namespace Squidex.Areas.Api.Controllers.Rules
         [ApiCosts(1)]
         public async Task<IActionResult> GetRules(string app)
         {
-            var rules = await ruleQuery.QueryAsync(Context);
+            var rules = await ruleQuery.QueryAsync(Context, HttpContext.RequestAborted);
 
             var response = Deferred.AsyncResponse(() =>
             {
@@ -145,7 +145,7 @@ namespace Squidex.Areas.Api.Controllers.Rules
         [ApiCosts(1)]
         public async Task<IActionResult> DeleteRuleRun(string app)
         {
-            await ruleRunnerService.CancelAsync(App.Id);
+            await ruleRunnerService.CancelAsync(App.Id, HttpContext.RequestAborted);
 
             return NoContent();
         }
@@ -259,7 +259,27 @@ namespace Squidex.Areas.Api.Controllers.Rules
         [ApiCosts(1)]
         public async Task<IActionResult> PutRuleRun(string app, DomainId id, [FromQuery] bool fromSnapshots = false)
         {
-            await ruleRunnerService.RunAsync(App.Id, id, fromSnapshots);
+            await ruleRunnerService.RunAsync(App.Id, id, fromSnapshots, HttpContext.RequestAborted);
+
+            return NoContent();
+        }
+
+        /// <summary>
+        /// Cancels all rule events.
+        /// </summary>
+        /// <param name="app">The name of the app.</param>
+        /// <param name="id">The id of the rule to cancel.</param>
+        /// <returns>
+        /// 204 => Rule events cancelled.
+        /// </returns>
+        [HttpDelete]
+        [Route("apps/{app}/rules/{id}/events/")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ApiPermissionOrAnonymous(Permissions.AppRulesEvents)]
+        [ApiCosts(1)]
+        public async Task<IActionResult> DeleteRuleEvents(string app, DomainId id)
+        {
+            await ruleEventsRepository.CancelByRuleAsync(id, HttpContext.RequestAborted);
 
             return NoContent();
         }
@@ -280,7 +300,7 @@ namespace Squidex.Areas.Api.Controllers.Rules
         [ApiCosts(5)]
         public async Task<IActionResult> Simulate(string app, DomainId id)
         {
-            var rule = await appProvider.GetRuleAsync(AppId, id);
+            var rule = await appProvider.GetRuleAsync(AppId, id, HttpContext.RequestAborted);
 
             if (rule == null)
             {
@@ -332,9 +352,9 @@ namespace Squidex.Areas.Api.Controllers.Rules
         [ApiCosts(0)]
         public async Task<IActionResult> GetEvents(string app, [FromQuery] DomainId? ruleId = null, [FromQuery] int skip = 0, [FromQuery] int take = 20)
         {
-            var ruleEvents = await ruleEventsRepository.QueryByAppAsync(AppId, ruleId, skip, take);
+            var ruleEvents = await ruleEventsRepository.QueryByAppAsync(AppId, ruleId, skip, take, HttpContext.RequestAborted);
 
-            var response = RuleEventsDto.FromRuleEvents(ruleEvents, Resources);
+            var response = RuleEventsDto.FromRuleEvents(ruleEvents, Resources, ruleId);
 
             return Ok(response);
         }
@@ -354,14 +374,33 @@ namespace Squidex.Areas.Api.Controllers.Rules
         [ApiCosts(0)]
         public async Task<IActionResult> PutEvent(string app, DomainId id)
         {
-            var ruleEvent = await ruleEventsRepository.FindAsync(id);
+            var ruleEvent = await ruleEventsRepository.FindAsync(id, HttpContext.RequestAborted);
 
             if (ruleEvent == null)
             {
                 return NotFound();
             }
 
-            await ruleEventsRepository.EnqueueAsync(id, SystemClock.Instance.GetCurrentInstant());
+            await ruleEventsRepository.EnqueueAsync(id, SystemClock.Instance.GetCurrentInstant(), HttpContext.RequestAborted);
+
+            return NoContent();
+        }
+
+        /// <summary>
+        /// Cancels all events.
+        /// </summary>
+        /// <param name="app">The name of the app.</param>
+        /// <returns>
+        /// 204 => Events cancelled.
+        /// </returns>
+        [HttpDelete]
+        [Route("apps/{app}/rules/events/")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ApiPermissionOrAnonymous(Permissions.AppRulesEvents)]
+        [ApiCosts(1)]
+        public async Task<IActionResult> DeleteEvents(string app)
+        {
+            await ruleEventsRepository.CancelByAppAsync(App.Id, HttpContext.RequestAborted);
 
             return NoContent();
         }
@@ -381,14 +420,14 @@ namespace Squidex.Areas.Api.Controllers.Rules
         [ApiCosts(0)]
         public async Task<IActionResult> DeleteEvent(string app, DomainId id)
         {
-            var ruleEvent = await ruleEventsRepository.FindAsync(id);
+            var ruleEvent = await ruleEventsRepository.FindAsync(id, HttpContext.RequestAborted);
 
             if (ruleEvent == null)
             {
                 return NotFound();
             }
 
-            await ruleEventsRepository.CancelAsync(id);
+            await ruleEventsRepository.CancelByRuleAsync(id, HttpContext.RequestAborted);
 
             return NoContent();
         }
@@ -438,7 +477,7 @@ namespace Squidex.Areas.Api.Controllers.Rules
         {
             var context = await CommandBus.PublishAsync(command);
 
-            var runningRuleId = await ruleRunnerService.GetRunningRuleIdAsync(Context.App.Id);
+            var runningRuleId = await ruleRunnerService.GetRunningRuleIdAsync(Context.App.Id, HttpContext.RequestAborted);
 
             var result = context.Result<IEnrichedRuleEntity>();
             var response = RuleDto.FromRule(result, runningRuleId == null, ruleRunnerService, Resources);

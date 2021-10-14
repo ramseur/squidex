@@ -133,6 +133,9 @@
   <data name="apps.languages.masterLanguageNotRemovable" xml:space="preserve">
     <value>La lingua master non può essere rimossa.</value>
   </data>
+  <data name="apps.maximumTotalReached" xml:space="preserve">
+    <value>You cannot create more apps. Please contact the support to remove this restriction from your account.</value>
+  </data>
   <data name="apps.nameAlreadyExists" xml:space="preserve">
     <value>Esiste già un'app con lo stesso nome.</value>
   </data>
@@ -225,6 +228,9 @@
   </data>
   <data name="common.displayName" xml:space="preserve">
     <value>Nome da visualizzare</value>
+  </data>
+  <data name="common.documentation" xml:space="preserve">
+    <value>Documentation</value>
   </data>
   <data name="common.editor" xml:space="preserve">
     <value>Redattore</value>
@@ -628,6 +634,9 @@
   <data name="contents.validation.unique" xml:space="preserve">
     <value>Esiste un altro contenuto con lo stesso valore.</value>
   </data>
+  <data name="contents.validation.uniqueObjectValues" xml:space="preserve">
+    <value>Must not contain items with duplicate '{field}' fields.</value>
+  </data>
   <data name="contents.validation.unknownField" xml:space="preserve">
     <value>Non è noto {fieldType}.</value>
   </data>
@@ -969,6 +978,15 @@
   </data>
   <data name="setup.title" xml:space="preserve">
     <value>Installazione</value>
+  </data>
+  <data name="setup.webpack.headline" xml:space="preserve">
+    <value>webpack error</value>
+  </data>
+  <data name="setup.webpack.text" xml:space="preserve">
+    <value>You have to run webpack dev server to run the frontend in Development mode. More information in the documenation: </value>
+  </data>
+  <data name="setup.webpack.title" xml:space="preserve">
+    <value>webpack error</value>
   </data>
   <data name="users.accessDenied.text" xml:space="preserve">
     <value>Questa operazione non è consentita, il tuo account potrebbe essere bloccato.</value>

@@ -37,51 +37,55 @@ namespace Squidex.Domain.Apps.Entities.Rules.Runner
             this.ruleService = ruleService;
         }
 
-        public async Task<List<SimulatedRuleEvent>> SimulateAsync(IRuleEntity rule, CancellationToken ct)
+        public async Task<List<SimulatedRuleEvent>> SimulateAsync(IRuleEntity rule,
+            CancellationToken ct = default)
         {
             Guard.NotNull(rule, nameof(rule));
 
-            var context = GetContext(rule);
+            var context = new RuleContext
+            {
+                AppId = rule.AppId,
+                Rule = rule.RuleDef,
+                RuleId = rule.Id,
+                IncludeSkipped = true,
+                IncludeStale = true
+            };
 
-            var result = new List<SimulatedRuleEvent>(MaxSimulatedEvents);
+            var simulatedEvents = new List<SimulatedRuleEvent>(MaxSimulatedEvents);
 
             var fromNow = SystemClock.Instance.GetCurrentInstant().Minus(Duration.FromDays(7));
 
-            await foreach (var storedEvent in eventStore.QueryAllReverseAsync($"^([a-z]+)\\-{rule.AppId.Id}", fromNow, MaxSimulatedEvents, ct))
+            await foreach (var storedEvent in eventStore.QueryAllReverseAsync($"^([a-zA-Z0-9]+)\\-{rule.AppId.Id}", fromNow, MaxSimulatedEvents, ct))
             {
                 var @event = eventDataFormatter.ParseIfKnown(storedEvent);
 
                 if (@event?.Payload is AppEvent appEvent)
                 {
-                    await foreach (var (job, exception, skip) in ruleService.CreateJobsAsync(@event, context, ct))
+                    // Also create jobs for rules with failing conditions because we want to show them in th table.
+                    await foreach (var result in ruleService.CreateJobsAsync(@event, context, ct))
                     {
-                        var name = job?.EventName;
+                        var eventName = result.Job?.EventName;
 
-                        if (string.IsNullOrWhiteSpace(name))
+                        if (string.IsNullOrWhiteSpace(eventName))
                         {
-                            name = ruleService.GetName(appEvent);
+                            eventName = ruleService.GetName(appEvent);
                         }
 
-                        var simulationResult = new SimulatedRuleEvent(
-                            name,
-                            job?.ActionName,
-                            job?.ActionData,
-                            exception?.Message,
-                            skip);
-
-                        result.Add(simulationResult);
+                        simulatedEvents.Add(new SimulatedRuleEvent
+                        {
+                            ActionData = result.Job?.ActionData,
+                            ActionName = result.Job?.ActionName,
+                            EnrichedEvent = result.EnrichedEvent,
+                            Error = result.EnrichmentError?.Message,
+                            Event = @event.Payload,
+                            EventName = eventName,
+                            SkipReason = result.SkipReason
+                        });
                     }
                 }
             }
 
-            return result;
-        }
-
-        public Task CancelAsync(DomainId appId)
-        {
-            var grain = grainFactory.GetGrain<IRuleRunnerGrain>(appId.ToString());
-
-            return grain.CancelAsync();
+            return simulatedEvents;
         }
 
         public bool CanRunRule(IRuleEntity rule)
@@ -98,14 +102,24 @@ namespace Squidex.Domain.Apps.Entities.Rules.Runner
             return CanRunRule(rule) && ruleService.CanCreateSnapshotEvents(context);
         }
 
-        public Task<DomainId?> GetRunningRuleIdAsync(DomainId appId)
+        public Task CancelAsync(DomainId appId,
+            CancellationToken ct = default)
+        {
+            var grain = grainFactory.GetGrain<IRuleRunnerGrain>(appId.ToString());
+
+            return grain.CancelAsync();
+        }
+
+        public Task<DomainId?> GetRunningRuleIdAsync(DomainId appId,
+            CancellationToken ct = default)
         {
             var grain = grainFactory.GetGrain<IRuleRunnerGrain>(appId.ToString());
 
             return grain.GetRunningRuleIdAsync();
         }
 
-        public Task RunAsync(DomainId appId, DomainId ruleId, bool fromSnapshots = false)
+        public Task RunAsync(DomainId appId, DomainId ruleId, bool fromSnapshots = false,
+            CancellationToken ct = default)
         {
             var grain = grainFactory.GetGrain<IRuleRunnerGrain>(appId.ToString());
 
@@ -118,8 +132,7 @@ namespace Squidex.Domain.Apps.Entities.Rules.Runner
             {
                 AppId = rule.AppId,
                 Rule = rule.RuleDef,
-                RuleId = rule.Id,
-                IgnoreStale = false
+                RuleId = rule.Id
             };
         }
     }
