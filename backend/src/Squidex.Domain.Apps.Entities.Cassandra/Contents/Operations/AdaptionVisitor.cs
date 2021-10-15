@@ -9,7 +9,7 @@ using System;
 using Squidex.Infrastructure;
 using Squidex.Infrastructure.Queries;
 
-namespace Squidex.Domain.Apps.Entities.Cassandra.Contents.Operations
+namespace Squidex.Domain.Apps.Entities.MongoDb.Contents.Operations
 {
     internal sealed class AdaptionVisitor : TransformVisitor<ClrValue, None>
     {

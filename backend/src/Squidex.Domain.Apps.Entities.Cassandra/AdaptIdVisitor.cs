@@ -14,7 +14,7 @@ using Squidex.Infrastructure.Queries;
 
 #pragma warning disable SA1313 // Parameter names should begin with lower-case letter
 
-namespace Squidex.Domain.Apps.Entities.Cassandra
+namespace Squidex.Domain.Apps.Entities.MongoDb
 {
     internal sealed class AdaptIdVisitor : TransformVisitor<ClrValue, AdaptIdVisitor.Args>
     {

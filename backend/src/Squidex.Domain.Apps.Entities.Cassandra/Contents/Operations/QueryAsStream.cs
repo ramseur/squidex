@@ -12,13 +12,13 @@ using MongoDB.Driver;
 using Squidex.Domain.Apps.Entities.Contents;
 using Squidex.Infrastructure;
 
-namespace Squidex.Domain.Apps.Entities.Cassandra.Contents.Operations
+namespace Squidex.Domain.Apps.Entities.MongoDb.Contents.Operations
 {
     public sealed class QueryAsStream : OperationBase
     {
-        public override IEnumerable<CreateIndexModel<ContentEntity>> CreateIndexes()
+        public override IEnumerable<CreateIndexModel<MongoContentEntity>> CreateIndexes()
         {
-            yield return new CreateIndexModel<ContentEntity>(Index
+            yield return new CreateIndexModel<MongoContentEntity>(Index
                 .Ascending(x => x.IndexedAppId)
                 .Ascending(x => x.IsDeleted)
                 .Ascending(x => x.IndexedSchemaId));

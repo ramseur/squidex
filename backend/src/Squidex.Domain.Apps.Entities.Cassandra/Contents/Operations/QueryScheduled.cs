@@ -5,7 +5,6 @@
 //  All rights reserved. Licensed under the MIT license.
 // ==========================================================================
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -17,13 +16,13 @@ using Squidex.Domain.Apps.Entities.Schemas;
 using Squidex.Infrastructure;
 using Squidex.Infrastructure.MongoDb;
 
-namespace Squidex.Domain.Apps.Entities.Cassandra.Contents.Operations
+namespace Squidex.Domain.Apps.Entities.MongoDb.Contents.Operations
 {
     internal sealed class QueryScheduled : OperationBase
     {
-        public override IEnumerable<CreateIndexModel<ContentEntity>> CreateIndexes()
+        public override IEnumerable<CreateIndexModel<MongoContentEntity>> CreateIndexes()
         {
-            yield return new CreateIndexModel<ContentEntity>(Index
+            yield return new CreateIndexModel<MongoContentEntity>(Index
                 .Ascending(x => x.ScheduledAt)
                 .Ascending(x => x.IsDeleted)
                 .Ascending(x => x.IndexedAppId)
@@ -48,19 +47,15 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Contents.Operations
             return ResultList.Create(contentTotal, contentEntities);
         }
 
-        public Task QueryAsync(Instant now, Func<IContentEntity, Task> callback,
+        public IAsyncEnumerable<IContentEntity> QueryAsync(Instant now,
             CancellationToken ct)
         {
-            Guard.NotNull(callback, nameof(callback));
-
-            return Collection.Find(x => x.ScheduledAt < now && x.IsDeleted != true).Not(x => x.Data)
-                .ForEachAsync(c =>
-                {
-                    callback(c);
-                }, ct);
+#pragma warning disable MA0073 // Avoid comparison with bool constant
+            return Collection.Find(x => x.ScheduledAt < now && x.IsDeleted != true).Not(x => x.Data).ToAsyncEnumerable(ct);
+#pragma warning restore MA0073 // Avoid comparison with bool constant
         }
 
-        private static FilterDefinition<ContentEntity> CreateFilter(DomainId appId, IEnumerable<DomainId> schemaIds, Instant scheduledFrom, Instant scheduledTo)
+        private static FilterDefinition<MongoContentEntity> CreateFilter(DomainId appId, IEnumerable<DomainId> schemaIds, Instant scheduledFrom, Instant scheduledTo)
         {
             return Filter.And(
                 Filter.Gte(x => x.ScheduledAt, scheduledFrom),

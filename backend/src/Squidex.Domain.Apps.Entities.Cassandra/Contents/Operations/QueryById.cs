@@ -12,7 +12,7 @@ using Squidex.Domain.Apps.Entities.Contents;
 using Squidex.Domain.Apps.Entities.Schemas;
 using Squidex.Infrastructure;
 
-namespace Squidex.Domain.Apps.Entities.Cassandra.Contents.Operations
+namespace Squidex.Domain.Apps.Entities.MongoDb.Contents.Operations
 {
     internal sealed class QueryById : OperationBase
     {

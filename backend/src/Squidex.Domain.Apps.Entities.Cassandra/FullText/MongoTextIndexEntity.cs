@@ -12,9 +12,9 @@ using MongoDB.Bson.Serialization.Attributes;
 using Squidex.Infrastructure;
 using Squidex.Infrastructure.MongoDb;
 
-namespace Squidex.Domain.Apps.Entities.Cassandra.FullText
+namespace Squidex.Domain.Apps.Entities.MongoDb.FullText
 {
-    public sealed class TextIndexEntity
+    public sealed class MongoTextIndexEntity
     {
         [BsonId]
         [BsonElement]
@@ -50,7 +50,7 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.FullText
 
         [BsonIgnoreIfNull]
         [BsonElement("t")]
-        public List<TextIndexEntityText> Texts { get; set; }
+        public List<MongoTextIndexEntityText> Texts { get; set; }
 
         [BsonIgnoreIfNull]
         [BsonElement("gf")]

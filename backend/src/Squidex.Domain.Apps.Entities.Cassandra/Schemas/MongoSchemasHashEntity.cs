@@ -5,31 +5,26 @@
 //  All rights reserved. Licensed under the MIT license.
 // ==========================================================================
 
-using MongoDB.Bson;
+using System.Collections.Generic;
 using MongoDB.Bson.Serialization.Attributes;
-using Squidex.Infrastructure.MongoDb;
+using NodaTime;
+using Squidex.Infrastructure;
 
-namespace Squidex.Infrastructure.States
+namespace Squidex.Domain.Apps.Entities.MongoDb.Schemas
 {
     [BsonIgnoreExtraElements]
-    public class MongoState<T> : IVersionedEntity<DomainId>
+    public sealed class MongoSchemasHashEntity
     {
         [BsonId]
         [BsonElement]
-        [BsonRepresentation(BsonType.String)]
-        public DomainId DocumentId { get; set; }
+        public DomainId AppId { get; set; }
 
         [BsonRequired]
-        [BsonElement("Doc")]
-        [BsonJson]
-        public T Document { get; set; }
+        [BsonElement("s")]
+        public Dictionary<string, long> SchemaVersions { get; set; }
 
         [BsonRequired]
-        [BsonElement]
-        public long Version { get; set; }
-
-        public virtual void Prepare()
-        {
-        }
+        [BsonElement("t")]
+        public Instant Updated { get; set; }
     }
 }

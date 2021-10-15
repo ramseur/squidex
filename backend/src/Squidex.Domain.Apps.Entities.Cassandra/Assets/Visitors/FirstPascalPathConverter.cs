@@ -8,7 +8,7 @@
 using Squidex.Infrastructure;
 using Squidex.Infrastructure.Queries;
 
-namespace Squidex.Domain.Apps.Entities.Cassandra.Assets.Visitors
+namespace Squidex.Domain.Apps.Entities.MongoDb.Assets.Visitors
 {
     public sealed class FirstPascalPathConverter<TValue> : TransformVisitor<TValue, None>
     {

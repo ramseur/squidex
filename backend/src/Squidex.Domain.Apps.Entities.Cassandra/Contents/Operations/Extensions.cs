@@ -13,7 +13,7 @@ using MongoDB.Driver;
 using Squidex.Domain.Apps.Core.Contents;
 using Squidex.Infrastructure;
 
-namespace Squidex.Domain.Apps.Entities.Cassandra.Contents.Operations
+namespace Squidex.Domain.Apps.Entities.MongoDb.Contents.Operations
 {
     public static class Extensions
     {
@@ -36,10 +36,10 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Contents.Operations
             public Status Status { get; set; }
         }
 
-        public static Task<List<StatusModel>> FindStatusAsync(this IMongoCollection<ContentEntity> collection, FilterDefinition<ContentEntity> filter,
+        public static Task<List<StatusModel>> FindStatusAsync(this IMongoCollection<MongoContentEntity> collection, FilterDefinition<MongoContentEntity> filter,
             CancellationToken ct)
         {
-            var projections = Builders<ContentEntity>.Projection;
+            var projections = Builders<MongoContentEntity>.Projection;
 
             return collection.Find(filter)
                 .Project<StatusModel>(projections

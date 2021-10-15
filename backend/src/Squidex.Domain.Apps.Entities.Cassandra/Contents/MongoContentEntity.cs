@@ -13,10 +13,10 @@ using Squidex.Domain.Apps.Entities.Contents;
 using Squidex.Infrastructure;
 using Squidex.Infrastructure.MongoDb;
 
-namespace Squidex.Domain.Apps.Entities.Cassandra.Contents
+namespace Squidex.Domain.Apps.Entities.MongoDb.Contents
 {
     [BsonIgnoreExtraElements]
-    public sealed class ContentEntity : IContentEntity, IVersionedEntity<DomainId>
+    public sealed class MongoContentEntity : IContentEntity, IVersionedEntity<DomainId>
     {
         [BsonId]
         [BsonElement("_id")]

@@ -5,25 +5,23 @@
 //  All rights reserved. Licensed under the MIT license.
 // ==========================================================================
 
-using System.Collections.Generic;
 using MongoDB.Bson.Serialization.Attributes;
-using NodaTime;
 
-namespace Squidex.Domain.Apps.Entities.Cassandra.Schemas
+namespace Squidex.Domain.Apps.Entities.MongoDb.FullText
 {
-    [BsonIgnoreExtraElements]
-    public sealed class SchemasHashEntity
+    public sealed class MongoTextIndexEntityText
     {
-        [BsonId]
-        [BsonElement]
-        public string AppId { get; set; }
-
-        [BsonRequired]
-        [BsonElement("s")]
-        public Dictionary<string, long> SchemaVersions { get; set; }
-
         [BsonRequired]
         [BsonElement("t")]
-        public Instant Updated { get; set; }
+        public string Text { get; set; }
+
+        [BsonIgnoreIfNull]
+        [BsonElement("language")]
+        public string Language { get; set; } = "none";
+
+        public static MongoTextIndexEntityText FromText(string text)
+        {
+            return new MongoTextIndexEntityText { Text = text };
+        }
     }
 }

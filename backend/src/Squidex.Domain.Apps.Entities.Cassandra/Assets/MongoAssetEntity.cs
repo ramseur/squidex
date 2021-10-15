@@ -13,9 +13,9 @@ using Squidex.Domain.Apps.Entities.Assets;
 using Squidex.Infrastructure;
 using Squidex.Infrastructure.MongoDb;
 
-namespace Squidex.Domain.Apps.Entities.Cassandra.Assets
+namespace Squidex.Domain.Apps.Entities.MongoDb.Assets
 {
-    public sealed class AssetEntity : IAssetEntity, IVersionedEntity<DomainId>
+    public sealed class MongoAssetEntity : IAssetEntity, IVersionedEntity<DomainId>
     {
         [BsonId]
         [BsonElement("_id")]

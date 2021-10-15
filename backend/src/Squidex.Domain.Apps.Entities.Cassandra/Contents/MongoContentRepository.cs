@@ -5,7 +5,6 @@
 //  All rights reserved. Licensed under the MIT license.
 // ==========================================================================
 
-using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,33 +20,34 @@ using Squidex.Infrastructure;
 using Squidex.Infrastructure.MongoDb;
 using Squidex.Infrastructure.Queries;
 
-namespace Squidex.Domain.Apps.Entities.Cassandra.Contents
+namespace Squidex.Domain.Apps.Entities.MongoDb.Contents
 {
-    public partial class ContentRepository : IContentRepository, IInitializable
+    public partial class MongoContentRepository : IContentRepository, IInitializable
     {
-        private readonly ContentCollection collectionAll;
-        private readonly ContentCollection collectionPublished;
+        private readonly MongoContentCollection collectionAll;
+        private readonly MongoContentCollection collectionPublished;
         private readonly IAppProvider appProvider;
 
-        static ContentRepository()
+        static MongoContentRepository()
         {
             TypeConverterStringSerializer<Status>.Register();
         }
 
-        public ContentRepository(IMongoDatabase database, IAppProvider appProvider)
+        public MongoContentRepository(IMongoDatabase database, IAppProvider appProvider)
         {
             collectionAll =
-                new ContentCollection("States_Contents_All3", database, appProvider,
+                new MongoContentCollection("States_Contents_All3", database, appProvider,
                     ReadPreference.Primary);
 
             collectionPublished =
-                new ContentCollection("States_Contents_Published3", database, appProvider,
+                new MongoContentCollection("States_Contents_Published3", database, appProvider,
                     ReadPreference.Secondary);
 
             this.appProvider = appProvider;
         }
 
-        public async Task InitializeAsync(CancellationToken ct = default)
+        public async Task InitializeAsync(
+            CancellationToken ct)
         {
             await collectionAll.InitializeAsync(ct);
             await collectionPublished.InitializeAsync(ct);
@@ -57,6 +57,12 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Contents
             CancellationToken ct = default)
         {
             return collectionAll.StreamAll(appId, schemaIds, ct);
+        }
+
+        public IAsyncEnumerable<IContentEntity> QueryScheduledWithoutDataAsync(Instant now,
+            CancellationToken ct = default)
+        {
+            return collectionAll.QueryScheduledWithoutDataAsync(now, ct);
         }
 
         public Task<IResultList<IContentEntity>> QueryAsync(IAppEntity app, List<ISchemaEntity> schemas, Q q, SearchScope scope,
@@ -130,19 +136,13 @@ namespace Squidex.Domain.Apps.Entities.Cassandra.Contents
             return collectionAll.ResetScheduledAsync(documentId, ct);
         }
 
-        public Task QueryScheduledWithoutDataAsync(Instant now, Func<IContentEntity, Task> callback,
-            CancellationToken ct = default)
-        {
-            return collectionAll.QueryScheduledWithoutDataAsync(now, callback, ct);
-        }
-
         public Task<IReadOnlyList<(DomainId SchemaId, DomainId Id, Status Status)>> QueryIdsAsync(DomainId appId, DomainId schemaId, FilterNode<ClrValue> filterNode,
             CancellationToken ct = default)
         {
             return collectionAll.QueryIdsAsync(appId, schemaId, filterNode, ct);
         }
 
-        public IEnumerable<IMongoCollection<ContentEntity>> GetInternalCollections()
+        public IEnumerable<IMongoCollection<MongoContentEntity>> GetInternalCollections()
         {
             yield return collectionAll.GetInternalCollection();
             yield return collectionPublished.GetInternalCollection();
